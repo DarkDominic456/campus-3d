@@ -20,6 +20,8 @@ export const playerRuntime = {
   pendingTeleport: null as { position: Vector3Tuple; facing: number } | null,
   /** Set by Player after a teleport; consumed by ThirdPersonCamera to snap behind the player. */
   cameraSnap: null as { facing: number } | null,
+  /** True while the orbit camera is squeezed right behind the head (PlayerModel hides itself). */
+  cameraTooClose: false,
 }
 
 /**

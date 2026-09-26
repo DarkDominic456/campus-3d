@@ -14,7 +14,10 @@ interface CharacterModelProps {
   phase?: number
   /** Crossfade duration in seconds. */
   fade?: number
-  /** Skip animation updates beyond this camera distance (meters). */
+  /**
+   * Level of detail by camera distance (meters): beyond `cullDistance / 2` the animation
+   * updates at a third of the frame rate, beyond `cullDistance` the model is hidden and frozen.
+   */
   cullDistance?: number
   /** Skinned shadows cost a second skinning pass; seated NPCs turn this off. */
   castShadow?: boolean
@@ -76,12 +79,25 @@ export function CharacterModel({
     current.current?.setEffectiveTimeScale(timeScale)
   }, [timeScale, animation])
 
+  const lod = useRef({ frame: Math.floor(Math.random() * 3), pending: 0 })
   useFrame((state, delta) => {
+    let dt = Math.min(delta, 0.1)
     if (cullDistance !== Infinity) {
       object.getWorldPosition(worldPos)
-      if (worldPos.distanceToSquared(state.camera.position) > cullDistance * cullDistance) return
+      const d2 = worldPos.distanceToSquared(state.camera.position)
+      const far = d2 > cullDistance * cullDistance
+      if (object.visible === far) object.visible = !far
+      if (far) return
+      if (d2 > (cullDistance / 2) ** 2) {
+        // Mid distance: skinning + mixer every 3rd frame, catching up the skipped time.
+        const l = lod.current
+        l.pending += dt
+        if (++l.frame % 3 !== 0) return
+        dt = Math.min(l.pending, 0.2)
+        l.pending = 0
+      }
     }
-    mixer.update(Math.min(delta, 0.1))
+    mixer.update(dt)
   })
 
   return <primitive object={object} scale={CHARACTER_SCALE} />

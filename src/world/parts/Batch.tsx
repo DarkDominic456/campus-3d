@@ -12,16 +12,19 @@ import {
 import { useGLTF } from '@react-three/drei'
 import { BoxGeometry, InstancedMesh, Matrix4, Mesh, MeshStandardMaterial, Object3D } from 'three'
 import { propUrl, type PropName } from '../../assets/models'
+import { LayerGroup, useLayer, type Layer } from '../layers'
 
 /**
  * Static-geometry batching. Every <Block> and <Model> inside a <BatchProvider> registers
  * its world matrix here instead of drawing itself; BatchRenderer draws one InstancedMesh
- * per (color, shadow) for boxes and per sub-mesh for GLB props. ~200 draw calls → ~40.
- * Only for things that never move.
+ * per (layer, color, shadow) for boxes and per (layer, sub-mesh) for GLB props.
+ * ~200 draw calls → ~40. Only for things that never move. Items remember the visibility
+ * layer (world/layers.tsx) of the zone they were declared in, so hidden zones hide their
+ * instances too.
  */
 
-type BoxItem = { kind: 'box'; matrix: Matrix4; color: string; castShadow: boolean }
-type PropItem = { kind: 'prop'; matrix: Matrix4; name: PropName; castShadow: boolean }
+type BoxItem = { kind: 'box'; matrix: Matrix4; color: string; castShadow: boolean; layer?: Layer }
+type PropItem = { kind: 'prop'; matrix: Matrix4; name: PropName; castShadow: boolean; layer?: Layer }
 type BatchItem = BoxItem | PropItem
 
 class BatchStore {
@@ -85,14 +88,15 @@ export function useBatchedItems(
   make: (world: Matrix4) => BatchItem[],
 ) {
   const batch = useBatch()
+  const layer = useLayer()
   const makeRef = useRef(make)
   makeRef.current = make
   useLayoutEffect(() => {
     if (!batch || !anchor.current) return
     anchor.current.updateWorldMatrix(true, false)
-    const ids = makeRef.current(anchor.current.matrixWorld.clone()).map((item) => batch.add(item))
+    const ids = makeRef.current(anchor.current.matrixWorld.clone()).map((item) => batch.add({ ...item, layer }))
     return () => ids.forEach((id) => batch.remove(id))
-  }, [batch, anchor, key])
+  }, [batch, anchor, key, layer])
 }
 
 // ---------------------------------------------------------------------------
@@ -107,36 +111,42 @@ const materialFor = (color: string) => {
 
 function BatchRenderer({ store }: { store: BatchStore }) {
   const version = useSyncExternalStore(store.subscribe, store.getVersion)
-  const groups = useMemo(() => {
-    const boxes = new Map<string, BoxItem[]>()
-    const props = new Map<string, PropItem[]>()
+  const layers = useMemo(() => {
+    const byLayer = new Map<Layer, { boxes: Map<string, BoxItem[]>; props: Map<string, PropItem[]> }>()
     for (const item of store.list()) {
+      const layer = item.layer ?? 'always'
+      let g = byLayer.get(layer)
+      if (!g) byLayer.set(layer, (g = { boxes: new Map(), props: new Map() }))
       if (item.kind === 'box') {
         const key = `${item.color}|${item.castShadow}`
-        boxes.set(key, [...(boxes.get(key) ?? []), item])
+        g.boxes.set(key, [...(g.boxes.get(key) ?? []), item])
       } else {
         const key = `${item.name}|${item.castShadow}`
-        props.set(key, [...(props.get(key) ?? []), item])
+        g.props.set(key, [...(g.props.get(key) ?? []), item])
       }
     }
-    return { boxes: [...boxes.entries()], props: [...props.entries()], version }
+    return { entries: [...byLayer.entries()], version }
   }, [store, version])
 
   return (
     <>
-      {groups.boxes.map(([key, items]) => (
-        <InstancedGeometry
-          key={key}
-          geometry={unitBox}
-          material={materialFor(items[0].color)}
-          matrices={items.map((i) => i.matrix)}
-          castShadow={items[0].castShadow}
-        />
-      ))}
-      {groups.props.map(([key, items]) => (
-        <Suspense key={key} fallback={null}>
-          <PropBatch name={items[0].name} matrices={items.map((i) => i.matrix)} castShadow={items[0].castShadow} />
-        </Suspense>
+      {layers.entries.map(([layer, g]) => (
+        <LayerGroup key={layer} layer={layer}>
+          {[...g.boxes.entries()].map(([key, items]) => (
+            <InstancedGeometry
+              key={key}
+              geometry={unitBox}
+              material={materialFor(items[0].color)}
+              matrices={items.map((i) => i.matrix)}
+              castShadow={items[0].castShadow}
+            />
+          ))}
+          {[...g.props.entries()].map(([key, items]) => (
+            <Suspense key={key} fallback={null}>
+              <PropBatch name={items[0].name} matrices={items.map((i) => i.matrix)} castShadow={items[0].castShadow} />
+            </Suspense>
+          ))}
+        </LayerGroup>
       ))}
     </>
   )

@@ -6,10 +6,12 @@ import { LearningContent } from '../ui/overlays/LearningOverlay'
 import { ArcadeContent } from '../ui/overlays/ArcadeOverlay'
 import { DemoForm, Pricing } from '../ui/overlays/OfficeOverlay'
 import { AuthContent } from '../ui/overlays/AuthOverlay'
+import { ProfileContent } from '../ui/overlays/ProfileOverlay'
+import { displayName } from '../services/auth'
 import { SlideDeck } from '../ui/slides/SlideDeck'
 import { GAMES, gameMeta, type GameId } from '../minigames/registry'
 
-const ROUTES = ['home', 'learn', 'games', 'about', 'pricing', 'contact', 'account'] as const
+const ROUTES = ['home', 'learn', 'games', 'about', 'pricing', 'contact', 'account', 'profile'] as const
 type Route = (typeof ROUTES)[number]
 
 const NAV: { route: Route; label: string }[] = [
@@ -70,6 +72,7 @@ export function Site2D() {
           </Page>
         )}
         {route === 'account' && <Account />}
+        {route === 'profile' && <ProfilePage />}
       </main>
       <footer className="border-t border-slate-200 py-8 text-center text-xs text-slate-500">
         Campus 3D · 3D art by Kenney (CC0) ·{' '}
@@ -103,8 +106,9 @@ function Header({ route }: { route: Route }) {
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-2 text-sm sm:ml-0">
-          <a href="#/account" className="rounded-lg px-3 py-1.5 whitespace-nowrap text-slate-700 hover:bg-slate-100">
-            {user ? user.name : 'Log in'}
+          <a href={user ? '#/profile' : '#/account'} className="flex items-center gap-2 rounded-lg px-3 py-1.5 whitespace-nowrap text-slate-700 hover:bg-slate-100">
+            {user?.profile.photo && <img src={user.profile.photo} alt="" className="size-6 rounded-full object-cover" />}
+            {user ? displayName(user) : 'Log in'}
           </a>
           {webgl && (
             <button type="button" onClick={() => setMode('3d')} className="rounded-lg bg-sky-600 px-3 py-1.5 font-semibold whitespace-nowrap text-white hover:bg-sky-500">
@@ -206,7 +210,17 @@ function Account() {
   return (
     <Page title={user ? 'Your account' : 'Log in or sign up'}>
       <div className="max-w-lg rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-        <AuthContent avatarPreview={false} onDone={() => navigate('home')} />
+        <AuthContent onDone={() => navigate('home')} profileLink={{ label: 'Set up your profile', onClick: () => navigate('profile') }} />
+      </div>
+    </Page>
+  )
+}
+
+function ProfilePage() {
+  return (
+    <Page title="Your profile" intro="How you appear on campus. Your email comes from signup; your password is never shown.">
+      <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+        <ProfileContent avatarPreview={false} needAccount={{ label: 'Sign up or log in', onClick: () => navigate('account') }} />
       </div>
     </Page>
   )

@@ -20,6 +20,8 @@ export interface OverlayPropsMap {
   office: { tab?: 'demo' | 'pricing' }
   /** Gaming room: mini-game launcher, or straight into one game (arcade cabinets). */
   arcade: { game?: GameId }
+  /** Office profile desk / HUD user chip: edit profile, email, password. */
+  profile: Record<string, never>
 }
 export type OverlayId = keyof OverlayPropsMap
 
@@ -65,6 +67,17 @@ interface GameState {
   activeOverlay: ActiveOverlay | null
   openOverlay: <K extends OverlayId>(id: K, props?: OverlayPropsMap[K]) => void
   closeOverlay: () => void
+  /** Optional veto on closing (e.g. unsaved profile changes); return false to keep it open. */
+  closeGuard: (() => boolean) | null
+  setCloseGuard: (guard: (() => boolean) | null) => void
+
+  /**
+   * Teleport request from UI that must stay free of three.js (it is shared with the 2D site).
+   * A bridge in App3D performs it with playerRuntime.teleportTo.
+   */
+  teleportRequest: { position: Vector3Tuple; facing: number } | null
+  requestTeleport: (position: Vector3Tuple, facing: number) => void
+  clearTeleportRequest: () => void
 
   focus: FocusState | null
   enterFocus: (focus: FocusState) => void
@@ -112,11 +125,20 @@ function readHintSeen() {
 
 export const useGameStore = create<GameState>()((set, get) => ({
   activeOverlay: null,
-  openOverlay: (id, props) => set({ activeOverlay: { id, props } }),
+  openOverlay: (id, props) => set({ activeOverlay: { id, props }, closeGuard: null }),
   closeOverlay: () => {
-    set({ activeOverlay: null })
+    const guard = get().closeGuard
+    if (guard && !guard()) return
+    set({ activeOverlay: null, closeGuard: null })
     if (get().focus?.exitWithOverlay) get().exitFocus()
   },
+
+  closeGuard: null,
+  setCloseGuard: (closeGuard) => set({ closeGuard }),
+
+  teleportRequest: null,
+  requestTeleport: (position, facing) => set({ teleportRequest: { position, facing } }),
+  clearTeleportRequest: () => set({ teleportRequest: null }),
 
   focus: null,
   enterFocus: (focus) => set({ focus }),

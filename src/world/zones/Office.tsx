@@ -19,6 +19,8 @@ const OFFICE_CHAIR_SEAT = 0.5
 const FACE_WALL = -Math.PI / 2 // −X
 const FACE_DOOR = Math.PI / 2 // +X
 const RECEPTION = { x: -9.5, z: -8 }
+/** Profile desk (HR): edit name, photo, contact, bio, email and password. */
+const PROFILE_DESK = { x: -9.9, z: -3 }
 /** Workstations with someone working (index into DESK_ZS). */
 const WORKERS = [0, 1, 3]
 
@@ -45,6 +47,7 @@ export function Office() {
           { position: at(-6.6, 1, 0.25), size: [1, 0.5, 0.6] }, // coffee table
           { position: at(-10.7, RECEPTION.z, 0.9), size: [0.6, 1.8, 0.6] }, // receptionist
           { position: at(-4.7, -12, 0.9), size: [0.5, 1.8, 0.5] }, // coat rack
+          { position: at(PROFILE_DESK.x - 0.4, PROFILE_DESK.z, 0.6), size: [1.9, 1.2, 1.6] }, // profile desk + clerk
         ]}
       />
 
@@ -78,6 +81,23 @@ export function Office() {
         <Model name="coatRackStanding" position={at(-4.7, -12)} />
         <Model name="bookcaseClosedWide" position={at(-13, BUILDING.minZ + 0.45)} />
       </Suspense>
+
+      {/* Profile desk */}
+      <Sign text="PROFILE" position={[PROFILE_DESK.x, 3.1, PROFILE_DESK.z]} rotationY={FACE_DOOR} width={2.2} background="#7c3aed" />
+      <Suspense fallback={null}>
+        <Model name="desk" position={at(PROFILE_DESK.x, PROFILE_DESK.z)} rotationY={FACE_DOOR} />
+        <Model name="computerScreen" position={at(PROFILE_DESK.x - 0.15, PROFILE_DESK.z - 0.3, DESK_TOP)} rotationY={FACE_DOOR} />
+        <Model name="chairDesk" position={at(PROFILE_DESK.x - 0.95, PROFILE_DESK.z)} rotationY={FACE_DOOR} />
+        <StaticNpc variant="female-b" position={seatPosition(PROFILE_DESK.x - 0.95, OFFICE_CHAIR_SEAT, PROFILE_DESK.z)} facing={FACE_DOOR} animation="study" />
+      </Suspense>
+      <Interactable
+        id="office-profile"
+        prompt="Press E to edit your profile"
+        position={[PROFILE_DESK.x + 1.4, 0, PROFILE_DESK.z]}
+        triggerSize={[0.9, 1.2, 1.2]}
+        promptOffset={[0, 2.3, 0]}
+        onInteract={() => useGameStore.getState().openOverlay('profile')}
+      />
 
       <Plant position={[-4.8, 0, 9.2]} />
       <Plant position={[-17.2, 0, -13.2]} />

@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useThree } from '@react-three/fiber'
 import { useGameStore, type PlayerAnimation } from '../../store/useGameStore'
 import { scores } from '../../services/scores'
+import { displayName } from '../../services/auth'
 import { resetRuntime, useSportStore, type SportId } from './sportStore'
 import { SPORTS, sportFocusId } from './config'
 
@@ -78,7 +79,7 @@ export function SportController() {
     const { score } = useSportStore.getState()
     const user = useGameStore.getState().user
     scores
-      .submit({ gameId: active, userId: user?.id ?? 'guest', name: user?.name ?? 'Guest', score })
+      .submit({ gameId: active, userId: user?.id ?? 'guest', name: displayName(user), score })
       .then((r) => {
         if (useSportStore.getState().run === run) useSportStore.setState({ result: { ...r, score } })
       })

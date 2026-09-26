@@ -5,6 +5,7 @@ import { useGameStore, type OverlayPropsMap } from '../../store/useGameStore'
 import { submitDemoRequest, type DemoRequest } from '../../services/forms'
 import { email, maxLength, minLength, required, validate } from '../../utils/validation'
 import { PLANS } from '../../content/pricing'
+import { displayName } from '../../services/auth'
 
 type Tab = 'demo' | 'pricing'
 
@@ -44,7 +45,7 @@ const RULES = {
 export function DemoForm() {
   const user = useGameStore((s) => s.user)
   const [values, setValues] = useState<DemoRequest>({
-    name: user?.name ?? '',
+    name: user?.profile.displayName ?? '',
     email: user?.email ?? '',
     organization: '',
     message: '',
@@ -147,7 +148,7 @@ export function Pricing({ onRequestDemo }: { onRequestDemo: () => void }) {
             {plan.cta === 'demo' ? (
               <PrimaryButton type="button" onClick={onRequestDemo}>Request a demo</PrimaryButton>
             ) : user ? (
-              <p className="text-center text-sm text-slate-500">You&apos;re signed in as {user.name}</p>
+              <p className="text-center text-sm text-slate-500">You&apos;re signed in as {displayName(user)}</p>
             ) : (
               <PrimaryButton type="button" onClick={() => openOverlay('auth', { mode: 'signup' })}>Sign up</PrimaryButton>
             )}

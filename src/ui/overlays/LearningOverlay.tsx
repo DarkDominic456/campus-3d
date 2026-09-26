@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { OverlayShell } from './OverlayShell'
 import { COURSES, type Course } from '../../content/courses'
 import { useGameStore } from '../../store/useGameStore'
+import { displayName } from '../../services/auth'
 
 const PROGRESS_KEY = 'campus3d.learningProgress'
 
@@ -41,7 +42,7 @@ export function LearningContent() {
   return (
     <>
       <p className="mb-4 text-sm text-slate-600">
-        {user ? `Welcome back, ${user.name}.` : 'You are learning as a guest — log in at the gate to keep your progress with your account.'}
+        {user ? `Welcome back, ${displayName(user)}.` : 'You are learning as a guest — log in at the gate to keep your progress with your account.'}
       </p>
       <div className="grid gap-5 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
         <ul className="space-y-2" aria-label="Courses">

@@ -14,6 +14,8 @@ import { useSceneReady } from './world/sceneReady'
 import { LoadingView } from './ui/LoadingView'
 import { SlowDeviceBanner } from './ui/SlowDeviceBanner'
 import { useIsTouch } from './ui/touch'
+import { TeleportBridge } from './player/TeleportBridge'
+import { Bench, BenchTable, benchEnabled } from './world/Bench'
 
 // Dev-only handle for debugging / automated browser checks (renderer is added in onCreated).
 if (import.meta.env.DEV) {
@@ -27,6 +29,11 @@ export default function App3D() {
   const quality = useGameStore((s) => s.graphicsQuality)
   const setQuality = useGameStore((s) => s.setGraphicsQuality)
   const touch = useIsTouch()
+
+  // Phones and tablets start at low quality; PerformanceMonitor only ever steps down.
+  useEffect(() => {
+    if (touch) setQuality('low')
+  }, [touch, setQuality])
 
   // Full-screen game mode: no page scroll, no pinch-zooming the page (pinch zooms the camera).
   useEffect(() => {
@@ -45,24 +52,28 @@ export default function App3D() {
       <Canvas
         // PCF (not PCF-soft): noticeably cheaper on integrated GPUs, looks nearly the same here.
         shadows="percentage"
-        camera={{ fov: 60, near: 0.1, far: 200, position: [0, 4, 12] }}
+        camera={{ fov: 60, near: 0.1, far: 130, position: [0, 4, 12] }}
         dpr={quality === 'high' ? [1, touch ? 1.5 : 2] : 1}
         onCreated={({ gl }) => {
           if (import.meta.env.DEV) Object.assign((window as unknown as { __game: object }).__game, { renderer: gl })
         }}
       >
         {/* Drop to low quality (DPR 1, no real-time shadows) if the frame rate keeps falling. */}
-        <PerformanceMonitor onDecline={() => setQuality('low')} flipflops={3} onFallback={() => setQuality('low')} />
+        {/* Off during ?bench=1 so runs are comparable (quality stays 'high'). */}
+        {!benchEnabled() && <PerformanceMonitor onDecline={() => setQuality('low')} flipflops={3} onFallback={() => setQuality('low')} />}
         <Suspense fallback={null}>
           <World />
         </Suspense>
+        {benchEnabled() && <Bench />}
       </Canvas>
       <InteractionManager />
       <ZoneTracker />
       <SportController />
+      <TeleportBridge />
       <UILayer />
       <LoadingScreen />
       <SlowDeviceBanner />
+      {benchEnabled() && <BenchTable />}
     </KeyboardControls>
   )
 }

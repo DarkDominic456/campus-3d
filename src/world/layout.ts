@@ -36,6 +36,14 @@ export const STAIRS = (() => {
 
 export const GATE_Z = 30
 
+/** Where "take me to…" buttons drop the player (capsule center + facing, radians around Y). */
+export const SPOTS = {
+  /** In front of the login booth at the gate. */
+  gateBooth: { position: [6.55, 0.9, GATE_Z + 3] as [number, number, number], facing: Math.PI / 2 },
+  /** In front of the office profile desk (first floor). */
+  profileDesk: { position: [-7.4, FLOOR1_Y + 0.9, -3] as [number, number, number], facing: -Math.PI / 2 },
+}
+
 /** Outdoor sports areas behind the building. */
 export const COURTS = {
   basketball: { cx: -30, cz: -40, w: 15, d: 14, hoopZ: -46 },

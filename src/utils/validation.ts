@@ -31,3 +31,18 @@ export function validate<T extends { [K in keyof T]: string }>(
   }
   return errors
 }
+
+/** At least 8 characters with a letter and a number. */
+export const password: Rule = (v) =>
+  v.length < 8 ? 'Password must be at least 8 characters.' : !/[a-z]/i.test(v) || !/\d/.test(v) ? 'Use at least one letter and one number.' : null
+
+/** Confirm-password style check against another field's current value. */
+export const matches = (other: string, message: string): Rule => (v) => (v === other ? null : message)
+
+/** Optional phone number: 7–15 digits; +, spaces, dashes, dots and brackets allowed. */
+export const phone: Rule = (v) => {
+  if (!v.trim()) return null
+  if (!/^[+\d\s().-]+$/.test(v)) return 'Use digits, spaces, +, - or brackets only.'
+  const digits = v.replace(/\D/g, '').length
+  return digits >= 7 && digits <= 15 ? null : 'Enter a valid phone number (7–15 digits).'
+}

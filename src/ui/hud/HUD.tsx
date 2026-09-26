@@ -8,6 +8,7 @@ import { isTypingTarget } from '../../utils/dom'
 import { useIsTouch } from '../touch'
 import { TouchControls } from './TouchControls'
 import { useModeStore } from '../../mode/mode'
+import { displayName } from '../../services/auth'
 
 /** Always-on screen chrome: location, user, teleport/help buttons, minimap, controls hint. */
 export function HUD() {
@@ -90,14 +91,21 @@ function UserChip() {
     <button
       type="button"
       onClick={() => {
-        if (!useGameStore.getState().activeOverlay) openOverlay('auth')
+        if (!useGameStore.getState().activeOverlay) openOverlay(user ? 'profile' : 'auth')
       }}
-      title={user ? 'Your account' : 'Log in or sign up'}
-      className="pointer-events-auto hidden rounded-full bg-slate-900/75 px-3 py-1.5 text-sm text-white shadow-lg ring-1 ring-white/15 backdrop-blur hover:bg-slate-800 sm:block"
+      title={user ? 'Your profile' : 'Log in or sign up'}
+      className="pointer-events-auto hidden items-center gap-2 rounded-full bg-slate-900/75 py-1.5 pr-3 pl-1.5 text-sm text-white shadow-lg ring-1 ring-white/15 backdrop-blur hover:bg-slate-800 sm:flex"
     >
       {user ? (
         <>
-          Logged in as <span className="font-semibold">{user.name}</span>
+          {user.profile.photo ? (
+            <img src={user.profile.photo} alt="" className="size-6 rounded-full object-cover" />
+          ) : (
+            <span className="flex size-6 items-center justify-center rounded-full bg-sky-500 text-xs font-bold">
+              {displayName(user).charAt(0).toUpperCase()}
+            </span>
+          )}
+          <span className="max-w-32 truncate font-semibold">{displayName(user)}</span>
         </>
       ) : (
         <>

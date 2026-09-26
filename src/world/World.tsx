@@ -3,6 +3,7 @@ import { Sky } from '@react-three/drei'
 import { Physics } from '@react-three/rapier'
 import { BatchProvider } from './parts/Batch'
 import { ReadySignal } from './ReadySignal'
+import { ZoneLayer } from './layers'
 import { Ground } from './Ground'
 import { SunLight } from './SunLight'
 import { Campus } from './zones/Campus'
@@ -26,7 +27,8 @@ export function World() {
   return (
     <>
       <color attach="background" args={['#bfdbfe']} />
-      <fog attach="fog" args={['#cfe3f7', 70, 160]} />
+      {/* Fog ends just inside the camera's far plane (App3D), so far geometry is culled unseen. */}
+      <fog attach="fog" args={['#cfe3f7', 55, 125]} />
       <Sky sunPosition={[30, 40, 20]} />
       {/* Warm ground bounce + a little ambient keep ceilings and shaded rooms from going black */}
       <hemisphereLight args={['#ffffff', '#c9b99a', 1]} />
@@ -42,13 +44,20 @@ export function World() {
           <Campus />
           <Gate />
           <Building />
-          <Classroom />
-          <GamingRoom />
-          <Office />
-          <ConferenceRoom />
-          <Suspense fallback={null}>
-            <OutdoorGround />
-          </Suspense>
+          {/* Zones the player can't see from where they stand are hidden (world/layers.tsx). */}
+          <ZoneLayer layer="groundInterior">
+            <Classroom />
+            <GamingRoom />
+          </ZoneLayer>
+          <ZoneLayer layer="firstInterior">
+            <Office />
+            <ConferenceRoom />
+          </ZoneLayer>
+          <ZoneLayer layer="outdoor">
+            <Suspense fallback={null}>
+              <OutdoorGround />
+            </Suspense>
+          </ZoneLayer>
         </BatchProvider>
         <Suspense fallback={null}>
           <WalkingNpcs />

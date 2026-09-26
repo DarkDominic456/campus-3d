@@ -161,6 +161,7 @@ export function ThirdPersonCamera() {
     const shot = useGameStore.getState().focus?.camera ?? null
     if (shot) b.lastShot = shot
     b.t = MathUtils.clamp(b.t + (shot ? dt : -dt) / SHOT_BLEND_TIME, 0, 1)
+    playerRuntime.cameraTooClose = false
     if (b.t > 0 && b.lastShot) {
       const e = b.t * b.t * (3 - 2 * b.t) // smoothstep
       shotPos.set(...b.lastShot.position)
@@ -170,6 +171,8 @@ export function ThirdPersonCamera() {
       camera.lookAt(lookTarget)
     } else {
       camera.position.copy(orbitPos)
+      // Against a wall the camera can end up inside the (big) head — hide the model instead.
+      playerRuntime.cameraTooClose = o.distance < 0.9
       camera.lookAt(focus)
     }
   })

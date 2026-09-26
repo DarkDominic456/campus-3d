@@ -3,7 +3,7 @@ import { CharacterModel } from '../characters/CharacterModel'
 import type { CharacterAnim } from '../characters/clips'
 import type { CharacterVariant } from '../assets/models'
 
-export const NPC_CULL_DISTANCE = 40
+export const NPC_CULL_DISTANCE = 45
 
 /** Height of the hips above the character origin in the `sit` pose (0.026 units × scale). */
 export const SIT_HIP_OFFSET = 0.065

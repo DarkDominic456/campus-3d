@@ -3,11 +3,12 @@ import { OverlayShell } from './OverlayShell'
 import { GAMES, gameMeta, type GameId } from '../../minigames/registry'
 import { scores, type ScoreEntry, type SubmitScoreResult } from '../../services/scores'
 import { useGameStore, type OverlayPropsMap } from '../../store/useGameStore'
+import { displayName } from '../../services/auth'
 
 /** Current player's identity for scores: their account, or the shared 'guest' slot. */
 function usePlayerId() {
   const user = useGameStore((s) => s.user)
-  return { userId: user?.id ?? 'guest', name: user?.name ?? 'Guest', isGuest: !user }
+  return { userId: user?.id ?? 'guest', name: displayName(user), isGuest: !user }
 }
 
 /** Gaming room: mini-game launcher, game host and per-user high scores. */

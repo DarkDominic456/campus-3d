@@ -26,10 +26,19 @@ export function SunLight() {
     }
   }, [scene])
 
+  // The shadow map is re-rendered on demand instead of every frame: every 2nd frame while
+  // the player moves, every 4th when still (NPCs / balls still get shadows, at a lower rate).
+  const throttle = useRef({ frame: 0, lastX: 0, lastZ: 0 })
   useFrame(() => {
     const l = light.current
     if (!l) return
+    l.shadow.autoUpdate = false
+    const t = throttle.current
     const p = playerRuntime.position
+    const moving = Math.abs(p.x - t.lastX) + Math.abs(p.z - t.lastZ) > 0.01
+    t.lastX = p.x
+    t.lastZ = p.z
+    if (++t.frame % (moving ? 2 : 4) === 0) l.shadow.needsUpdate = true
     // Snap to whole meters to reduce shadow shimmering while moving.
     const x = Math.round(p.x)
     const z = Math.round(p.z)

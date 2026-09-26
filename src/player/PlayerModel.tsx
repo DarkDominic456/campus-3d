@@ -1,4 +1,7 @@
-import { Suspense } from 'react'
+import { Suspense, useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
+import type { Group } from 'three'
+import { playerRuntime } from './playerRuntime'
 import { CharacterModel } from '../characters/CharacterModel'
 import { useGameStore, type PlayerAnimation } from '../store/useGameStore'
 
@@ -14,8 +17,13 @@ export function PlayerModel() {
   const avatar = useGameStore((s) => s.playerAvatar)
   const hidden = useGameStore((s) => s.focus?.hidePlayer ?? false)
 
+  const group = useRef<Group>(null)
+  useFrame(() => {
+    if (group.current) group.current.visible = !hidden && !playerRuntime.cameraTooClose
+  })
+
   return (
-    <group visible={!hidden}>
+    <group ref={group} visible={!hidden}>
       <Suspense fallback={<CapsulePlaceholder />}>
         <CharacterModel key={avatar} variant={avatar} animation={anim} timeScale={TIME_SCALE[anim] ?? 1} fade={0.15} />
       </Suspense>

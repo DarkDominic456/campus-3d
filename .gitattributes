@@ -1,0 +1,5 @@
+# Consistent line endings for contributors on every OS.
+* text=auto eol=lf
+*.glb binary
+*.png binary
+*.jpg binary

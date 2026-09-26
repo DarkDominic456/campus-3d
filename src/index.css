@@ -1,0 +1,44 @@
+@import 'tailwindcss';
+
+html,
+body,
+#root {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: #f8fafc;
+}
+
+/* 3D mode (class set by App3D): full-screen canvas, no page scroll / bounce. */
+html.mode-3d,
+html.mode-3d body,
+html.mode-3d #root {
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: #bfdbfe;
+}
+
+canvas {
+  touch-action: none;
+}
+
+@keyframes prompt-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes loading-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}

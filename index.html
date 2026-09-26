@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Campus 3D — a walkable 3D campus with courses, mini games and sports, plus a lightweight 2D version." />
+    <meta name="theme-color" content="#0ea5e9" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='6' y='2' width='20' height='28' rx='10' fill='%233b82f6'/></svg>" />
+    <title>Campus 3D</title>
+  </head>
+  <body>
+    <div id="root">
+      <!-- Shown until React mounts (replaced on first render). Pure CSS, no JS. -->
+      <div style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(#bae6fd,#ecfdf5);font-family:system-ui,sans-serif;color:#0f172a">
+        <div style="font-size:32px;font-weight:900">Campus 3D</div>
+        <div style="margin-top:16px;width:180px;height:8px;border-radius:9999px;background:#ffffffb3;overflow:hidden">
+          <div style="width:40%;height:100%;border-radius:9999px;background:#0ea5e9;animation:boot 1.2s ease-in-out infinite"></div>
+        </div>
+      </div>
+      <style>@keyframes boot{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}</style>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

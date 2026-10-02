@@ -1,12 +1,19 @@
 import { Suspense, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import type { Group } from 'three'
-import { playerRuntime } from './playerRuntime'
+import { playerRuntime, RUN_SPEED, WALK_SPEED } from './playerRuntime'
 import { CharacterModel } from '../characters/CharacterModel'
+import { CLIP_SPEED } from '../characters/clips'
 import { useGameStore, type PlayerAnimation } from '../store/useGameStore'
 
-/** Animation speed per state, tuned so feet roughly match WALK_SPEED / RUN_SPEED in Player. */
-const TIME_SCALE: Partial<Record<PlayerAnimation, number>> = { walk: 1.5, run: 1.1 }
+/**
+ * Animation speed per state so the feet roughly match WALK_SPEED / RUN_SPEED in Player.
+ * Capped at 1.9× — faster looks frantic; a little foot sliding reads better.
+ */
+const TIME_SCALE: Partial<Record<PlayerAnimation, number>> = {
+  walk: Math.min(1.9, WALK_SPEED / CLIP_SPEED.walk),
+  run: Math.min(1.9, RUN_SPEED / CLIP_SPEED.run),
+}
 
 /**
  * Visual-only player model. Origin is at the feet, facing +Z.

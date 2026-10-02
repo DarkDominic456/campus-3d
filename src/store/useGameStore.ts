@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import type { Vector3Tuple } from 'three'
-import type { CharacterVariant } from '../assets/models'
+import { CHARACTERS, type CharacterVariant } from '../assets/models'
 import type { User } from '../services/auth'
 import type { GameId } from '../minigames/registry'
 
@@ -174,7 +174,9 @@ export const useGameStore = create<GameState>()((set, get) => ({
   setGraphicsQuality: (graphicsQuality) => set({ graphicsQuality }),
 
   user: null,
-  setUser: (user) => set({ user, playerAvatar: user?.avatar ?? DEFAULT_AVATAR }),
+  // Avatars removed in an update (e.g. the old Kenney 'female-f') fall back to the default.
+  setUser: (user) =>
+    set({ user, playerAvatar: user && (CHARACTERS as readonly string[]).includes(user.avatar) ? user.avatar : DEFAULT_AVATAR }),
 }))
 
 /** True while player input (movement, jump, interact, camera drag) must be ignored. */

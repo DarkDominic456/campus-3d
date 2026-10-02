@@ -17,8 +17,23 @@ export const POLYHAVEN = [
 export const TREES = ['oak', 'ash', 'aspen', 'pine', 'bush'] as const
 export const CHARACTERS = [
   'male-a', 'male-b', 'male-c', 'male-d', 'male-e', 'male-f',
-  'female-a', 'female-b', 'female-c', 'female-d', 'female-e', 'female-f',
+  'female-a', 'female-b', 'female-c', 'female-d', 'female-e',
 ] as const
+
+/** Display names for the avatar picker (Quaternius Ultimate Modular Men / Women). */
+export const AVATAR_LABELS: Record<(typeof CHARACTERS)[number], string> = {
+  'male-a': 'Casual',
+  'male-b': 'Hoodie',
+  'male-c': 'Business',
+  'male-d': 'Worker',
+  'male-e': 'Beach',
+  'male-f': 'Punk',
+  'female-a': 'Dress',
+  'female-b': 'Casual',
+  'female-c': 'Explorer',
+  'female-d': 'Hooded',
+  'female-e': 'Punk',
+}
 
 export type FurnitureName = (typeof FURNITURE)[number]
 export type NatureName = (typeof NATURE)[number]
@@ -31,8 +46,8 @@ export type CharacterVariant = (typeof CHARACTERS)[number]
 export const FURNITURE_SCALE = 2
 /** Kenney nature-kit props (flowers). */
 export const NATURE_SCALE = 3.5
-/** Mini characters are 0.67 units tall; ×2.5 ≈ 1.7 m, matching the player capsule. */
-export const CHARACTER_SCALE = 2.5
+/** Quaternius characters are ~1.86 m; ×0.92 ≈ 1.71 m, matching the player capsule. */
+export const CHARACTER_SCALE = 0.92
 
 const isNature = (name: PropName): name is NatureName => (NATURE as readonly string[]).includes(name)
 const isPolyhaven = (name: PropName): name is PolyhavenName => (POLYHAVEN as readonly string[]).includes(name)
@@ -44,4 +59,6 @@ const propFolder = (name: PropName) =>
 export const propUrl = (name: PropName) => `/models/${propFolder(name)}/${name}.glb`
 export const propScale = (name: PropName) => (isNature(name) ? NATURE_SCALE : isPolyhaven(name) || isTree(name) ? 1 : FURNITURE_SCALE)
 export const characterUrl = (variant: CharacterVariant) => `/models/characters/${variant}.glb`
-export const ANIMATIONS_URL = '/models/characters/animations.glb'
+/** Shared clips + rig per pack: the men's and women's skeletons have different bind poses. */
+export const ANIMATION_URLS = ['/models/characters/animations.glb', '/models/characters/animations-female.glb'] as const
+export const animationsUrl = (variant: CharacterVariant) => ANIMATION_URLS[variant.startsWith('female') ? 1 : 0]

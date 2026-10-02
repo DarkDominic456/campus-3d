@@ -11,17 +11,16 @@ import {
 import { Group, MathUtils, Quaternion, Vector3 } from 'three'
 import type { KinematicCharacterController } from '@dimforge/rapier3d-compat'
 import { externalInput, type ControlName } from './controls'
-import { playerRuntime, SPAWN_FACING, SPAWN_POSITION } from './playerRuntime'
+import { playerRuntime, RUN_SPEED, SPAWN_FACING, SPAWN_POSITION, WALK_SPEED } from './playerRuntime'
 import { PlayerModel } from './PlayerModel'
 import { isInputLocked, useGameStore, type PlayerAnimation } from '../store/useGameStore'
 
 // Capsule: total height = 2 * (HALF_HEIGHT + RADIUS) = 1.7 m. Wide enough for the
 // character model's big head so it doesn't poke through walls.
-export const CAPSULE_HALF_HEIGHT = 0.43
-export const CAPSULE_RADIUS = 0.42
+// 1.7 m tall; slimmer than the old Kenney characters (radius 0.42) to match real proportions.
+export const CAPSULE_HALF_HEIGHT = 0.53
+export const CAPSULE_RADIUS = 0.32
 
-const WALK_SPEED = 4
-const RUN_SPEED = 7
 const JUMP_VELOCITY = 7
 const GRAVITY = -20
 const ACCELERATION = 12 // higher = snappier start/stop

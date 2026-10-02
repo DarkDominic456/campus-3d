@@ -1,4 +1,5 @@
-import { AnimationClip, LoopOnce, LoopRepeat, type AnimationActionLoopStyles } from 'three'
+import { AnimationClip, LoopOnce, LoopRepeat, type AnimationActionLoopStyles, type Object3D } from 'three'
+import { buildPoseClips } from './poses'
 
 /** Animation states any character (player or NPC) can be in. */
 export type CharacterAnim =
@@ -16,36 +17,31 @@ export type CharacterAnim =
   | 'talk'
   | 'wave'
 
-/** Which source clip (from animations.glb) each simple state plays. */
-const SOURCE: Record<Exclude<CharacterAnim, 'study' | 'game'>, string> = {
-  idle: 'idle',
-  walk: 'walk',
-  run: 'sprint',
-  jump: 'jump',
-  fall: 'fall',
-  sit: 'sit',
-  talk: 'interact-right',
-  wave: 'emote-yes',
-}
+/** States played straight from a Quaternius clip in animations.glb; the rest are poses.ts. */
+const SOURCE = {
+  idle: 'Idle',
+  walk: 'Walk',
+  run: 'Run',
+  talk: 'Interact',
+  wave: 'Wave',
+} satisfies Partial<Record<CharacterAnim, string>>
+
+/**
+ * Ground speed (m/s) at which the Walk / Run clips' feet don't slide, at CHARACTER_SCALE —
+ * measured from the foot stride. timeScale = moving speed / this.
+ */
+export const CLIP_SPEED = { walk: 1.21, run: 2.35 }
 
 export const LOOP: Partial<Record<CharacterAnim, AnimationActionLoopStyles>> = { jump: LoopOnce }
 export const loopFor = (anim: CharacterAnim) => LOOP[anim] ?? LoopRepeat
 
-const isUpperBody = (trackName: string) => /^(arm-|torso|head)/.test(trackName)
-
-/** Seated legs/hips from `sit` + upper body from another clip. */
-function seatedWith(name: string, sit: AnimationClip, upper: AnimationClip) {
-  const tracks = [
-    ...sit.tracks.filter((t) => !isUpperBody(t.name)),
-    ...upper.tracks.filter((t) => isUpperBody(t.name)),
-  ].map((t) => t.clone())
-  return new AnimationClip(name, -1, tracks)
-}
-
 const cache = new WeakMap<AnimationClip[], Record<CharacterAnim, AnimationClip>>()
 
-/** Builds (once per loaded clip set) the clip for every CharacterAnim. */
-export function buildClips(source: AnimationClip[]): Record<CharacterAnim, AnimationClip> {
+/**
+ * Builds (once per loaded clip set) the clip for every CharacterAnim. `rig` is the skeleton
+ * scene of animations.glb (rest pose), used to build the procedural poses.
+ */
+export function buildClips(source: AnimationClip[], rig: Object3D): Record<CharacterAnim, AnimationClip> {
   const cached = cache.get(source)
   if (cached) return cached
 
@@ -54,12 +50,10 @@ export function buildClips(source: AnimationClip[]): Record<CharacterAnim, Anima
     if (!clip) throw new Error(`Animation "${name}" missing from animations.glb`)
     return clip
   }
-  const clips = Object.fromEntries(
-    Object.entries(SOURCE).map(([anim, name]) => [anim, byName(name)]),
-  ) as Record<CharacterAnim, AnimationClip>
-  clips.study = seatedWith('study', byName('sit'), byName('interact-right'))
-  clips.game = seatedWith('game', byName('sit'), byName('holding-both'))
-
+  const clips = {
+    ...(Object.fromEntries(Object.entries(SOURCE).map(([anim, name]) => [anim, byName(name)])) as Record<keyof typeof SOURCE, AnimationClip>),
+    ...buildPoseClips(rig, byName('Idle')),
+  }
   cache.set(source, clips)
   return clips
 }

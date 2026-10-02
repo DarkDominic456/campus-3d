@@ -1,9 +1,9 @@
 import { lazy, Suspense } from 'react'
-import { CHARACTERS, type CharacterVariant } from '../../assets/models'
+import { AVATAR_LABELS, CHARACTERS, type CharacterVariant } from '../../assets/models'
 
 const AvatarPreview = lazy(() => import('./AvatarPreview'))
 
-const label = (v: CharacterVariant) => `Avatar ${CHARACTERS.indexOf(v) + 1}`
+const label = (v: CharacterVariant) => `${v.startsWith('female') ? 'Woman' : 'Man'} · ${AVATAR_LABELS[v]}`
 
 /**
  * Grid of avatar buttons plus (optionally) a live 3D preview of the selected one.
@@ -29,19 +29,20 @@ export function AvatarPicker({
       )}
       <div>
         <p className="mb-2 text-sm font-medium text-slate-700">Choose your avatar</p>
-        <div role="radiogroup" aria-label="Avatar" className="grid grid-cols-4 gap-1.5">
+        <div role="radiogroup" aria-label="Avatar" className="grid grid-cols-3 gap-1.5">
           {CHARACTERS.map((v) => (
             <button
               key={v}
               type="button"
               role="radio"
               aria-checked={v === value}
+              aria-label={label(v)}
               onClick={() => onChange(v)}
               className={`rounded-md border px-2 py-1 text-xs font-medium transition ${
                 v === value ? 'border-sky-500 bg-sky-50 text-sky-800' : 'border-slate-200 text-slate-600 hover:border-slate-400'
               }`}
             >
-              {CHARACTERS.indexOf(v) + 1}
+              {AVATAR_LABELS[v]}
             </button>
           ))}
         </div>

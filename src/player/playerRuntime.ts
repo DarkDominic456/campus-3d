@@ -31,3 +31,7 @@ export const playerRuntime = {
 export function teleportTo(position: Vector3Tuple, facing: number) {
   playerRuntime.pendingTeleport = { position, facing }
 }
+
+/** Player ground speeds (m/s): brisk walk / run, matched to the clips in PlayerModel (CLIP_SPEED). */
+export const WALK_SPEED = 2.4
+export const RUN_SPEED = 5

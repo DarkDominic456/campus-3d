@@ -3,13 +3,14 @@ import { useFrame } from '@react-three/fiber'
 import { CapsuleCollider, RigidBody, type RapierRigidBody } from '@react-three/rapier'
 import { Group, MathUtils, Vector3, type Vector3Tuple } from 'three'
 import { CharacterModel } from '../characters/CharacterModel'
+import { CLIP_SPEED } from '../characters/clips'
 import type { CharacterAnim } from '../characters/clips'
 import type { CharacterVariant } from '../assets/models'
 import { playerRuntime } from '../player/playerRuntime'
 import { NPC_CULL_DISTANCE } from './StaticNpc'
 
-const HALF_HEIGHT = 0.43
-const RADIUS = 0.4
+const HALF_HEIGHT = 0.53
+const RADIUS = 0.32
 const CENTER_Y = HALF_HEIGHT + RADIUS
 const ARRIVE_DISTANCE = 0.15
 const TURN_SPEED = 8
@@ -101,7 +102,7 @@ export function WalkingNpc({ variant, path, mode = 'loop', speed = 1.4, pause = 
     <RigidBody ref={body} type="kinematicPosition" colliders={false} position={initialPosition}>
       <CapsuleCollider args={[HALF_HEIGHT, RADIUS]} />
       <group ref={model} position={[0, -CENTER_Y, 0]}>
-        <CharacterModel variant={variant} animation={anim} timeScale={anim === 'walk' ? 0.6 * speed : 1} phase={phase} cullDistance={NPC_CULL_DISTANCE} />
+        <CharacterModel variant={variant} animation={anim} timeScale={anim === 'walk' ? speed / CLIP_SPEED.walk : 1} phase={phase} cullDistance={NPC_CULL_DISTANCE} />
       </group>
     </RigidBody>
   )

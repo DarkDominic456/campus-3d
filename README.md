@@ -103,9 +103,15 @@ game). Read it before larger changes.
 
 ## Credits
 
-3D models: [Kenney](https://kenney.nl) — Mini Characters, Furniture Kit, Nature Kit (CC0).
-Licenses are included in `assets-src/`.
+- Characters: [Quaternius](https://quaternius.com) — Ultimate Modular Men / Women (CC0, via poly.pizza).
+- Furniture: [Poly Haven](https://polyhaven.com) (CC0) and [Kenney](https://kenney.nl) Furniture Kit (CC0).
+- Textures: [Poly Haven](https://polyhaven.com) and [ambientCG](https://ambientcg.com) (CC0); sky light from a Poly Haven HDRI.
+- Trees: generated with [EZ-Tree](https://github.com/dgreenheck/ez-tree) by Daniel Greenheck (MIT).
+- Flowers / small props: [Kenney](https://kenney.nl) Nature Kit (CC0).
+
+Kenney licenses are in `assets-src/`; the other sources are downloaded by
+`node scripts/fetch-sources.mjs` (git-ignored, each with a SOURCE.txt).
 
 ## License
 
-[MIT](LICENSE) for the code. Assets in `assets-src/` and `public/models/` are CC0 (Kenney).
+[MIT](LICENSE) for the code. Assets in `assets-src/`, `public/models/` and `public/textures/` are CC0, except the EZ-Tree-generated trees (MIT).

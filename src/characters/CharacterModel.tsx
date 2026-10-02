@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
 import { AnimationMixer, Mesh, Vector3, type AnimationAction } from 'three'
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js'
-import { ANIMATIONS_URL, CHARACTER_SCALE, characterUrl, type CharacterVariant } from '../assets/models'
+import { CHARACTER_SCALE, animationsUrl, characterUrl, type CharacterVariant } from '../assets/models'
 import { buildClips, loopFor, type CharacterAnim } from './clips'
 
 interface CharacterModelProps {
@@ -26,8 +26,8 @@ interface CharacterModelProps {
 const worldPos = new Vector3()
 
 /**
- * Animated Kenney mini character. Origin at the feet, faces +Z.
- * All variants share one skeleton, so clips come from a single animations.glb.
+ * Animated Quaternius character. Origin at the feet, faces +Z.
+ * Men and women each share one skeleton, so clips come from one file per pack (animationsUrl).
  */
 export function CharacterModel({
   variant,
@@ -39,8 +39,8 @@ export function CharacterModel({
   castShadow = true,
 }: CharacterModelProps) {
   const { scene } = useGLTF(characterUrl(variant))
-  const { animations } = useGLTF(ANIMATIONS_URL)
-  const clips = useMemo(() => buildClips(animations), [animations])
+  const { animations, scene: rig } = useGLTF(animationsUrl(variant))
+  const clips = useMemo(() => buildClips(animations, rig), [animations, rig])
 
   const object = useMemo(() => {
     const clone = cloneSkinned(scene)

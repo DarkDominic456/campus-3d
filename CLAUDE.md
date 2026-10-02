@@ -45,19 +45,34 @@ Vite 8, React 19, TypeScript 7, three 0.186, @react-three/fiber 9, @react-three/
 - **Sun shadows follow the player** (`world/SunLight.tsx`): one 1024² shadow map covering
   ±25 m around the player instead of the whole campus.
 - **Heavy zones are code-split**: `OutdoorGround` is `React.lazy` + `Suspense` in `World.tsx`.
-- **Assets** (Phase 3): Kenney CC0 packs — Mini Characters (12 skinned characters),
-  Furniture Kit, Nature Kit. Raw GLBs + licenses live in `assets-src/`;
+- **Assets** (Phase 3, characters replaced in round 2): Kenney CC0 Furniture Kit + Nature Kit
+  (flowers, small props). Raw GLBs + licenses live in `assets-src/`;
   `scripts/build-assets.mjs` centers props (bottom-center pivot, facing +Z), sets
   `metallicFactor = 0` (Kenney nature kit ships metallic=1 → renders black), recolors teal
-  leaves, strips animations from characters, and meshopt-compresses everything (~1.6 MB total).
-  Scales: furniture ×2, nature ×3.5, characters ×2.5 (see `src/assets/models.ts`).
-- **Characters**: all variants share one skeleton, so clips come from one
-  `characters/animations.glb`. `characters/CharacterModel.tsx` clones with `SkeletonUtils.clone`
-  (plain `.clone()` breaks skinning), owns its AnimationMixer, crossfades on `animation`
-  change and skips updates beyond `cullDistance`. `characters/clips.ts` maps states → clips and
-  builds composite poses: `study` = sit legs + `interact-right` arms (typing),
-  `game` = sit legs + `holding-both` arms. `sit` puts hips 0.065 m above the origin, so a
-  seated NPC's origin = seat height − 0.065 (`seatPosition()`).
+  leaves, strips animations from characters, and meshopt-compresses everything.
+  Scales: Kenney furniture ×2, nature ×3.5, characters ×0.92 (see `src/assets/models.ts`).
+- **Characters** (round 2): Quaternius Ultimate Modular Men / Women (CC0, poly.pizza; sources
+  git-ignored in `assets-src/quaternius/`, `fetch-sources.mjs characters`). ~1.86 m, ×0.92.
+  Men and women have different bind poses, so each pack has its own clip file
+  (`animations.glb` from male-a, `animations-female.glb` from female-a; `animationsUrl(variant)`)
+  — never play one pack's clips on the other (arms end up half T-posed).
+  Kept clips: Idle, Walk, Run, Interact (talk), Wave. Unskinned held props (a sword) are
+  stripped in the pipeline. Each character is **one draw call**: material colours baked into
+  COLOR_0, the 4 skinned meshes re-expressed in one skin's bind space and `joinPrimitives`-ed
+  (`join()` skips skinned meshes); NORMAL is dropped so vertices weld (GLTFLoader then uses
+  flatShading — same look) and it's simplified to ~3.5k tris → ~38 KB per character.
+  StaticNpcs use a tighter LOD (1/3-rate beyond 16 m, hidden beyond 32 m). `CharacterModel` clones with `SkeletonUtils.clone`, owns its mixer,
+  crossfades, and does distance LOD.
+  - **Procedural poses** (`characters/poses.ts`): the pack has no sit/jump, so sit / study
+    (typing, 2 keys) / game / jump / fall are built at load: from Idle frame 0, each listed bone
+    is rotated so bone→child points along a character-space direction (+Z forward, x =
+    outward, mirrored per side). The rig is an exported **IK rig**: thighs hang off `Body`
+    (not `Hips`) and `Foot.L/R` + knee pole targets `PT.L/R` are children of `Root` — so the
+    seated height moves `Body`, and feet are re-placed at the end of the posed shins.
+    Seat surface = origin + `SIT_SEAT_OFFSET` (0.04 m) → `seatPosition()`.
+  - Walk/Run feet don't slide at `CLIP_SPEED` (1.21 / 2.35 m/s); timeScale = speed / that
+    (player capped at 1.9×). Player speeds (`playerRuntime.ts`): walk 2.4, run 5 m/s.
+    Player / walking-NPC capsules: half-height 0.53, radius 0.32 (1.7 m).
 - **NPCs**: `npc/StaticNpc` (seated/standing, no collider — surrounding colliders keep the
   player out), `npc/WalkingNpc` (kinematic capsule on a waypoint path; stops and faces the
   player within 1.8 m so they never overlap), routes in `npc/WalkingNpcs.tsx`,

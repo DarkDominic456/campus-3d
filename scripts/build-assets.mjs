@@ -2,7 +2,7 @@
  * Asset pipeline: raw CC0 GLBs in assets-src/ → optimized GLBs in public/models/.
  * Run with `npm run assets` after adding or changing a source model.
  *
- * - Characters: textures embedded, animations stripped (shared clips live in
+ * - Characters (Quaternius, CC0): animations stripped (shared clips live in
  *   characters/animations.glb, which has the skeleton but no meshes).
  * - Props (furniture, nature): pivot moved to bottom-center so placement/rotation is predictable.
  * - Poly Haven models (assets-src/polyhaven/<id>/<id>.gltf, fetched by scripts/fetch-sources.mjs,
@@ -17,19 +17,26 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { Logger, NodeIO } from '@gltf-transform/core'
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions'
-import { center, dedup, meshopt, prune, resample, simplify, textureCompress, weld } from '@gltf-transform/functions'
+import { center, dedup, joinPrimitives, meshopt, prune, resample, simplify, textureCompress, weld } from '@gltf-transform/functions'
 import { MeshoptDecoder, MeshoptEncoder, MeshoptSimplifier } from 'meshoptimizer'
 import sharp from 'sharp'
-import { FloatType } from 'three'
+import { FloatType, Matrix3, Matrix4, Vector3 } from 'three'
 import { HDRLoader } from 'three/examples/jsm/loaders/HDRLoader.js'
 
 const ROOT = path.resolve(import.meta.dirname, '..')
 const SRC = path.join(ROOT, 'assets-src')
 const OUT = path.join(ROOT, 'public', 'models')
 
-/** Clips kept from the character pack (the rest — wheelchair, combat… — are dropped). */
-const KEEP_ANIMATIONS = ['idle', 'walk', 'sprint', 'jump', 'fall', 'sit', 'interact-right', 'holding-both', 'emote-yes', 'pick-up']
-const ANIMATION_SOURCE = 'character-male-a.glb'
+/**
+ * Clips kept from the Quaternius characters (the rest — guns, swords, punches — are dropped).
+ * Sitting / jumping poses don't exist in the pack; src/characters/poses.ts builds them at runtime.
+ */
+const KEEP_ANIMATIONS = ['Idle', 'Walk', 'Run', 'Interact', 'Wave']
+/**
+ * The men's and women's packs have different bind poses / bone lengths, so each gets its own
+ * clip file from one of its characters (clips set absolute local rotations and positions).
+ */
+const ANIMATION_SOURCES = { 'animations.glb': 'male-a.glb', 'animations-female.glb': 'female-a.glb' }
 
 /**
  * Material fixes applied to props. Kenney's nature kit ships with metallicFactor = 1
@@ -56,6 +63,7 @@ const PROP_PACKS = [
 ]
 
 await MeshoptEncoder.ready
+await MeshoptSimplifier.ready
 await MeshoptDecoder.ready
 const io = new NodeIO()
   .setLogger(new Logger(Logger.Verbosity.WARN))
@@ -74,6 +82,13 @@ async function write(doc, file) {
 
 const exists = (p) => fs.access(p).then(() => true, () => false)
 
+/** Disposes an animation with its channels and samplers (otherwise prune keeps their keyframe data). */
+function disposeAnimation(anim) {
+  for (const channel of anim.listChannels()) channel.dispose()
+  for (const sampler of anim.listSamplers()) sampler.dispose()
+  anim.dispose()
+}
+
 let total = 0
 const log = (file, size) => {
   total += size
@@ -81,21 +96,107 @@ const log = (file, size) => {
 }
 
 // ---------- Characters ----------
-const charDir = path.join(SRC, 'kenney-mini-characters')
-const charFiles = (await fs.readdir(charDir)).filter((f) => f.startsWith('character-') && f.endsWith('.glb'))
+/**
+ * One draw call per character: the packs split each character into 4 skinned meshes with ~10
+ * flat-colour materials (~10 draw calls each — 30 seated students cost ~300 calls). Material
+ * colours are baked into COLOR_0, every primitive moves into the first skinned mesh (re-expressed
+ * in its skin's bind space) and `joinPrimitives()` merges them into one primitive (`join()`
+ * skips skinned meshes).
+ */
+function mergeCharacter(doc) {
+  const root = doc.getRoot()
+  const nodes = root.listNodes().filter((n) => n.getMesh() && n.getSkin())
+  const [ref, ...others] = nodes
+  const shared = doc.createMaterial('Character').setBaseColorFactor([1, 1, 1, 1]).setMetallicFactor(0).setRoughnessFactor(0.75)
+  const mat4 = (array) => new Matrix4().fromArray(array)
+  const ibm = (skin, j) => mat4(skin.getInverseBindMatrices().getArray().slice(j * 16, j * 16 + 16))
+
+  for (const node of nodes) {
+    for (const prim of node.getMesh().listPrimitives()) {
+      const [r, g, b] = prim.getMaterial()?.getBaseColorFactor() ?? [1, 1, 1, 1]
+      const count = prim.getAttribute('POSITION').getCount()
+      const colors = new Float32Array(count * 3)
+      for (let i = 0; i < count; i++) colors.set([r, g, b], i * 3)
+      prim.setAttribute('COLOR_0', doc.createAccessor().setType('VEC3').setArray(colors).setBuffer(root.listBuffers()[0]))
+      prim.setMaterial(shared)
+    }
+  }
+
+  const refSkin = ref.getSkin()
+  const refWorldInv = mat4(ref.getWorldMatrix()).invert()
+  for (const node of others) {
+    const skin = node.getSkin()
+    if (skin.listJoints().map((j) => j.getName()).join() !== refSkin.listJoints().map((j) => j.getName()).join()) {
+      throw new Error(`${node.getName()}: skin joints differ from ${ref.getName()}`)
+    }
+    // three skins as boneWorld · IBM · meshWorld · v, so v' = refWorld⁻¹ · IBM_ref⁻¹ · IBM · world · v,
+    // valid only if IBM_ref⁻¹ · IBM is the same for every joint (a whole-mesh offset).
+    const d = ibm(refSkin, 0).invert().multiply(ibm(skin, 0))
+    for (let j = 1; j < skin.listJoints().length; j++) {
+      const dj = ibm(refSkin, j).invert().multiply(ibm(skin, j))
+      if (dj.elements.some((v, i) => Math.abs(v - d.elements[i]) > 1e-4)) throw new Error(`${node.getName()}: bind offset differs per joint`)
+    }
+    const m = refWorldInv.clone().multiply(d).multiply(mat4(node.getWorldMatrix()))
+    const n3 = new Matrix3().getNormalMatrix(m)
+    const v = new Vector3()
+    for (const prim of node.getMesh().listPrimitives()) {
+      const pos = prim.getAttribute('POSITION')
+      const nor = prim.getAttribute('NORMAL')
+      for (let i = 0; i < pos.getCount(); i++) {
+        pos.setElement(i, v.fromArray(pos.getElement(i, [])).applyMatrix4(m).toArray())
+        if (nor) nor.setElement(i, v.fromArray(nor.getElement(i, [])).applyMatrix3(n3).normalize().toArray())
+      }
+      ref.getMesh().addPrimitive(prim)
+    }
+    node.dispose()
+  }
+
+  const mesh = ref.getMesh()
+  const prims = mesh.listPrimitives()
+  // Same attribute layout everywhere (some parts use 8-bit joint indices, some 16-bit).
+  for (const prim of prims) {
+    const joints = prim.getAttribute('JOINTS_0')
+    if (joints && !(joints.getArray() instanceof Uint16Array)) joints.setArray(Uint16Array.from(joints.getArray()))
+  }
+  const merged = joinPrimitives(prims)
+  for (const prim of prims) {
+    mesh.removePrimitive(prim)
+    prim.dispose()
+  }
+  mesh.addPrimitive(merged)
+}
+
+const CHARACTER_SIMPLIFY = 0.6
+
+// Quaternius Ultimate Modular Men/Women (assets-src/quaternius, fetched by fetch-sources.mjs).
+const charDir = path.join(SRC, 'quaternius')
+const charFiles = (await fs.readdir(charDir)).filter((f) => f.endsWith('.glb'))
 
 for (const file of charFiles) {
   const doc = await io.read(path.join(charDir, file))
-  for (const anim of doc.getRoot().listAnimations()) anim.dispose()
+  for (const anim of doc.getRoot().listAnimations()) disposeAnimation(anim)
+  // Held props (e.g. the hooded adventurer's sword) are unskinned meshes parented to a hand.
+  for (const node of doc.getRoot().listNodes()) if (node.getMesh() && !node.getSkin()) node.dispose()
+  // Flat-coloured, flat-shaded, untextured: UVs, the unused vertex colours and the per-face
+  // normals are dead weight. Without NORMAL, GLTFLoader turns on flatShading (same look, from
+  // screen-space derivatives) and vertices can be shared: ~11.7k → ~3k skinned vertices.
+  for (const mesh of doc.getRoot().listMeshes()) {
+    for (const prim of mesh.listPrimitives()) for (const semantic of ['TEXCOORD_0', 'COLOR_0', 'NORMAL']) prim.setAttribute(semantic, null)
+  }
+  mergeCharacter(doc)
+  // ~5.8k → ~3.5k triangles: dozens are on screen at once (classroom) and each is GPU-skinned.
+  await doc.transform(weld(), simplify({ simplifier: MeshoptSimplifier, ratio: CHARACTER_SIMPLIFY, error: 0.01 }))
   await compress(doc)
-  const out = path.join(OUT, 'characters', file.replace('character-', ''))
+  const out = path.join(OUT, 'characters', file)
   log(out, await write(doc, out))
 }
 
-{
-  const doc = await io.read(path.join(charDir, ANIMATION_SOURCE))
+for (const [outName, source] of Object.entries(ANIMATION_SOURCES)) {
+  const doc = await io.read(path.join(charDir, source))
   for (const anim of doc.getRoot().listAnimations()) {
-    if (!KEEP_ANIMATIONS.includes(anim.getName())) anim.dispose()
+    const name = anim.getName().replace(/^.*\|/, '') // "CharacterArmature|Walk" → "Walk"
+    if (KEEP_ANIMATIONS.includes(name)) anim.setName(name)
+    else disposeAnimation(anim)
   }
   // Keep only the skeleton hierarchy: drop meshes/skins so the file is just clips.
   for (const node of doc.getRoot().listNodes()) {
@@ -106,7 +207,7 @@ for (const file of charFiles) {
   await compress(doc, { keepLeaves: true }) // leaf bones have no content but clips target them
   const missing = KEEP_ANIMATIONS.filter((n) => !doc.getRoot().listAnimations().some((a) => a.getName() === n))
   if (missing.length) throw new Error(`Missing animations: ${missing.join(', ')}`)
-  const out = path.join(OUT, 'characters', 'animations.glb')
+  const out = path.join(OUT, 'characters', outName)
   log(out, await write(doc, out))
 }
 

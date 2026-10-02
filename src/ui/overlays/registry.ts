@@ -7,6 +7,7 @@ import { LearningOverlay } from './LearningOverlay'
 import { OfficeOverlay } from './OfficeOverlay'
 import { ArcadeOverlay } from './ArcadeOverlay'
 import { ProfileOverlay } from './ProfileOverlay'
+import { SettingsOverlay } from './SettingsOverlay'
 
 /** Maps overlay ids to components. Overlays receive the props passed to openOverlay(). */
 export const overlayRegistry: { [K in OverlayId]: ComponentType<OverlayPropsMap[K]> } = {
@@ -17,4 +18,5 @@ export const overlayRegistry: { [K in OverlayId]: ComponentType<OverlayPropsMap[
   office: OfficeOverlay,
   arcade: ArcadeOverlay,
   profile: ProfileOverlay,
+  settings: SettingsOverlay,
 }

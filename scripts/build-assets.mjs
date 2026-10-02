@@ -7,6 +7,7 @@
  * - Props (furniture, nature): pivot moved to bottom-center so placement/rotation is predictable.
  * - Poly Haven models (assets-src/polyhaven/<id>/<id>.gltf, fetched by scripts/fetch-sources.mjs,
  *   git-ignored): simplified, textures → WebP 512 px, pivot bottom-center → public/models/polyhaven/.
+ * - Sound effects: Kenney CC0 .ogg → mono MP3 in public/audio/ (scripts/build-audio.mjs).
  * - Trees + bushes: generated with EZ-Tree (scripts/build-trees.mjs) → public/models/trees/.
  * - Everything: dedup + prune + meshopt compression (drei's useGLTF decodes meshopt).
  * - Textures (assets-src/textures/<surface>/{color,normal}.jpg, fetched by
@@ -269,6 +270,12 @@ if (await exists(phSrc)) {
     await compress(doc)
     log(file, await write(doc, file))
   })
+}
+
+// ---------- Sound effects ----------
+{
+  const { buildAudio } = await import('./build-audio.mjs')
+  await buildAudio(path.join(ROOT, 'public', 'audio'), log)
 }
 
 // ---------- Textures + sky light probe ----------

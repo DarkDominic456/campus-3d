@@ -30,7 +30,7 @@ export const PLAYER_SEAT = { x: ROWS[2] + CHAIR_OFFSET_X, z: COLS[4] + SEAT_OFFS
 /** Which seats have a studying NPC (by seat index); the rest stay empty. */
 const OCCUPIED = new Set([0, 1, 3, 5, 6, 8, 11, 12, 14, 15, 17, 18, 20, 23, 24, 26])
 
-const SEAT_FOCUS_ID = 'classroom-seat'
+export const SEAT_FOCUS_ID = 'classroom-seat'
 /** Delay before the laptop page opens, so the camera can glide over the shoulder first. */
 const OPEN_LAPTOP_DELAY_MS = 900
 

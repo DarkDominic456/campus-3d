@@ -140,6 +140,9 @@ export const ZONES: ZoneDef[] = [
 
 export const FALLBACK_ZONE = { id: 'campus', label: 'Campus Grounds' }
 
+/** Zones with a roof overhead: ambience is muffled and the lights come on at night. */
+export const INDOOR_ZONE_IDS = new Set(['classroom', 'gaming', 'hall', 'office', 'conference', 'corridor'])
+
 export function findZone(x: number, y: number, z: number): ZoneDef | null {
   for (const zone of ZONES) {
     const [ax, ay, az] = zone.min

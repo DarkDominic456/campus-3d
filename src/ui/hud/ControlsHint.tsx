@@ -1,4 +1,5 @@
 import { useGameStore } from '../../store/useGameStore'
+import { useTourStore } from '../../tour/tour'
 
 const TOUCH_CONTROLS: [string[], string][] = [
   [['Stick'], 'Move (push fully to run)'],
@@ -25,10 +26,15 @@ const CONTROLS: [string[], string][] = [
 export function ControlsHint({ touch = false }: { touch?: boolean }) {
   const show = useGameStore((s) => s.showControlsHint)
   const setShow = useGameStore((s) => s.setShowControlsHint)
+  const tourActive = useTourStore((s) => s.active)
   if (!show) return null
+  const close = () => {
+    useTourStore.getState().setOffered()
+    setShow(false)
+  }
 
   return (
-    <div className="pointer-events-auto w-72 rounded-xl bg-slate-900/85 p-4 text-slate-100 shadow-xl ring-1 ring-white/15 backdrop-blur animate-[prompt-in_200ms_ease-out]">
+    <div className="pointer-events-auto max-h-[calc(100dvh-5rem)] w-72 overflow-y-auto rounded-xl bg-slate-900/85 p-4 text-slate-100 shadow-xl ring-1 ring-white/15 backdrop-blur animate-[prompt-in_200ms_ease-out]">
       <h2 className="mb-1 text-sm font-semibold">Welcome! Here's how to get around</h2>
       <p className="mb-3 text-xs text-slate-400">Walk through the gate to explore the campus.</p>
       <ul className="space-y-1.5 text-sm">
@@ -45,12 +51,24 @@ export function ControlsHint({ touch = false }: { touch?: boolean }) {
           </li>
         ))}
       </ul>
+      {!tourActive && (
+        <button
+          type="button"
+          onClick={() => {
+            useTourStore.getState().start()
+            setShow(false)
+          }}
+          className="mt-4 w-full rounded-lg bg-emerald-500 py-1.5 text-sm font-semibold text-white hover:bg-emerald-400 focus-visible:outline-2 focus-visible:outline-white"
+        >
+          Take the campus tour
+        </button>
+      )}
       <button
         type="button"
-        onClick={() => setShow(false)}
-        className="mt-4 w-full rounded-lg bg-sky-500 py-1.5 text-sm font-semibold text-white hover:bg-sky-400 focus-visible:outline-2 focus-visible:outline-white"
+        onClick={close}
+        className={`${tourActive ? 'mt-4' : 'mt-2'} w-full rounded-lg bg-sky-500 py-1.5 text-sm font-semibold text-white hover:bg-sky-400 focus-visible:outline-2 focus-visible:outline-white`}
       >
-        Got it
+        {tourActive ? 'Got it' : 'Explore on my own'}
       </button>
     </div>
   )

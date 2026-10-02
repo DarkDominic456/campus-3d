@@ -13,6 +13,7 @@ import type { CharacterAnim } from '../../characters/clips'
 import { pingPong, sportRuntime, useSportStore } from './sportStore'
 import { playSportPose, useSportAction } from './SportController'
 import { GOAL, PENALTY_SPOT } from './config'
+import { playSound } from '../../audio/audio'
 
 const GRAVITY = 20
 const BALL_RADIUS = 0.11
@@ -138,6 +139,7 @@ export function FootballGame() {
       const time = d / SHOT_SPEED
       const vy = (st.ty - BALL_START[1] + 0.5 * GRAVITY * time * time) / time
       ball.current?.setLinvel({ x: (dx / d) * SHOT_SPEED, y: vy, z: (dz / d) * SHOT_SPEED }, true)
+      playSound('kick', { volume: 0.8 })
       // Keeper guesses: sometimes right, otherwise a random spot.
       st.keeperTarget = Math.random() < KEEPER.guessChance ? st.tx : (Math.random() * 2 - 1) * 3
       st.stage = 'flight'
@@ -150,7 +152,9 @@ export function FootballGame() {
 
   const onGoalSensor = useCallback(
     (p: IntersectionEnterPayload) => {
-      if (p.other.rigidBodyObject?.userData?.football) resolve('goal')
+      if (!p.other.rigidBodyObject?.userData?.football) return
+      playSound('net', { volume: 0.7 })
+      resolve('goal')
     },
     [resolve],
   )
@@ -169,7 +173,11 @@ export function FootballGame() {
         angularDamping={0.5}
         userData={{ football: true }}
         onCollisionEnter={({ other }) => {
-          if (other.rigidBodyObject?.userData?.keeper) s.current.touchedKeeper = true
+          const keeper = other.rigidBodyObject?.userData?.keeper
+          if (keeper) s.current.touchedKeeper = true
+          const v = ball.current?.linvel()
+          const speed = v ? Math.hypot(v.x, v.y, v.z) : 0
+          playSound(keeper ? 'kick' : 'ball-soft', { volume: Math.min(1, speed / 10) * (keeper ? 0.6 : 1) })
         }}
       >
         <BallCollider args={[BALL_RADIUS]} restitution={0.55} friction={0.8} density={0.4} />

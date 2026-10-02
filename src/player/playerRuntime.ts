@@ -22,6 +22,8 @@ export const playerRuntime = {
   cameraSnap: null as { facing: number } | null,
   /** True while the orbit camera is squeezed right behind the head (PlayerModel hides itself). */
   cameraTooClose: false,
+  /** Standing on something (set by Player each frame; footsteps / landing sounds read it). */
+  grounded: true,
 }
 
 /**

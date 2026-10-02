@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useGameStore } from '../../store/useGameStore'
 import { zoneLabel } from '../../world/zoneConfig'
 import { ControlsHint } from './ControlsHint'
+import { TourPanel } from './TourPanel'
 import { Minimap } from './Minimap'
 import { SportHud } from './SportHud'
 import { isTypingTarget } from '../../utils/dom'
@@ -9,6 +10,7 @@ import { useIsTouch } from '../touch'
 import { TouchControls } from './TouchControls'
 import { useModeStore } from '../../mode/mode'
 import { displayName } from '../../services/auth'
+import { useSettings } from '../../settings/settings'
 
 /** Always-on screen chrome: location, user, teleport/help buttons, minimap, controls hint. */
 export function HUD() {
@@ -20,19 +22,29 @@ export function HUD() {
 
   return (
     <>
-      <div className="absolute top-3 left-3">
+      <div className="absolute top-3 left-3 flex flex-col items-start gap-2">
         <LocationBadge />
+        <TourPanel touch={touch} />
       </div>
+      {/* On touch the bottom corners belong to the joystick and buttons: the welcome card goes top-center. */}
+      {touch && (
+        <div className="absolute top-16 left-1/2 -translate-x-1/2">
+          <ControlsHint touch />
+        </div>
+      )}
       <div className="absolute top-3 right-3 flex flex-wrap items-center justify-end gap-2">
         <UserChip />
         <HudButton label="Teleport" hotkey={touch ? undefined : 'T'} onClick={toggleTeleport} />
         <HudButton label="Controls" hotkey={touch ? undefined : 'H'} onClick={toggleHint} />
+        <SoundButton />
+        <HudButton label="Settings" onClick={openSettings} />
         <HudButton label="2D site" onClick={() => setMode('2d')} />
       </div>
-      {/* On touch the bottom corners belong to the joystick and buttons. */}
-      <div className={`absolute left-3 ${touch ? 'top-20' : 'bottom-3'}`}>
-        <ControlsHint touch={touch} />
-      </div>
+      {!touch && (
+        <div className="absolute bottom-3 left-3">
+          <ControlsHint />
+        </div>
+      )}
       {touch && <TouchControls />}
       {!focused && !touch && (
         <div className="absolute right-3 bottom-3">
@@ -49,6 +61,11 @@ function toggleTeleport() {
   const s = useGameStore.getState()
   if (s.activeOverlay?.id === 'teleport') s.closeOverlay()
   else if (!s.activeOverlay && !s.focus) s.openOverlay('teleport')
+}
+
+function openSettings() {
+  const s = useGameStore.getState()
+  if (!s.activeOverlay) s.openOverlay('settings')
 }
 
 function toggleHint() {
@@ -133,6 +150,27 @@ function FocusHint() {
       {focus.hint && <span className="mr-3">{focus.hint}</span>}
       <kbd className="rounded bg-white/90 px-1.5 font-mono text-[11px] font-bold text-slate-900">Esc</kbd>{' '}
       {seated ? 'stand up' : 'leave'}
+    </button>
+  )
+}
+
+/** One-tap mute (the full controls live in Settings). */
+function SoundButton() {
+  const muted = useSettings((s) => s.muted)
+  const set = useSettings((s) => s.set)
+  return (
+    <button
+      type="button"
+      onClick={() => set({ muted: !muted })}
+      aria-label={muted ? 'Turn sound on' : 'Mute sound'}
+      aria-pressed={!muted}
+      title={muted ? 'Sound off' : 'Sound on'}
+      className="pointer-events-auto flex size-8 items-center justify-center rounded-full bg-slate-900/75 text-white shadow-lg ring-1 ring-white/15 backdrop-blur hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-sky-400"
+    >
+      <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d="M11 5 6 9H3v6h3l5 4V5z" fill="currentColor" />
+        {muted ? <path d="m16 9 5 6m0-6-5 6" /> : <path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13" />}
+      </svg>
     </button>
   )
 }

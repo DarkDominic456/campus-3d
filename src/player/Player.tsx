@@ -166,6 +166,7 @@ export function Player() {
     controller.computeColliderMovement(collider, desired, rapier.QueryFilterFlags.EXCLUDE_SENSORS)
     const move = controller.computedMovement()
     grounded.current = controller.computedGrounded()
+    playerRuntime.grounded = grounded.current
     if (grounded.current && vel.y < 0) vel.y = 0
     if (vel.y > 0 && move.y < desired.y * 0.5) vel.y = 0 // bumped head
 

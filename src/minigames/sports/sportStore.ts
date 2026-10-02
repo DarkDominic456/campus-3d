@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { SubmitScoreResult } from '../../services/scores'
+import { playSound } from '../../audio/audio'
 
 export type SportId = 'basketball' | 'football' | 'cricket'
 export type SportPhase = 'countdown' | 'playing' | 'over'
@@ -46,7 +47,10 @@ export const useSportStore = create<SportState>()((set, get) => ({
   stop: () => set({ active: null, ...fresh }),
   addScore: (points) => set({ score: get().score + points }),
   setStat: (stat) => set({ stat }),
-  flash: (text, tone) => set({ message: { text, tone, key: Date.now() } }),
+  flash: (text, tone) => {
+    playSound(tone === 'great' ? 'great' : tone === 'good' ? 'good' : 'bad', { volume: 0.6 })
+    set({ message: { text, tone, key: Date.now() } })
+  },
   finish: () => {
     if (get().phase === 'playing') set({ phase: 'over', timeLeft: 0 })
   },

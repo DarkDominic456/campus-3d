@@ -1,13 +1,11 @@
 import { lazy, Suspense } from 'react'
-import { Sky } from '@react-three/drei'
-import { SphericalHarmonics3, Vector3 } from 'three'
-import skyProbe from './skyProbe.json'
 import { Physics } from '@react-three/rapier'
 import { BatchProvider } from './parts/Batch'
 import { ReadySignal } from './ReadySignal'
 import { ZoneLayer } from './layers'
 import { Ground } from './Ground'
-import { SunLight } from './SunLight'
+import { Atmosphere } from './Atmosphere'
+import { Lamps } from './parts/Lamps'
 import { Campus } from './zones/Campus'
 import { Gate } from './zones/Gate'
 import { Building } from './zones/Building'
@@ -22,8 +20,6 @@ import { ThirdPersonCamera } from '../player/ThirdPersonCamera'
 
 preloadModels()
 
-const SKY_PROBE = new SphericalHarmonics3().set(skyProbe.coefficients.map(([r, g, b]) => new Vector3(r, g, b)))
-
 // Heavy / far-away zones are code-split and stream in after the first frame.
 const OutdoorGround = lazy(() => import('./zones/OutdoorGround').then((m) => ({ default: m.OutdoorGround })))
 
@@ -33,13 +29,8 @@ export function World() {
       <color attach="background" args={['#bfdbfe']} />
       {/* Fog ends just inside the camera's far plane (App3D), so far geometry is culled unseen. */}
       <fog attach="fog" args={['#cfe3f7', 55, 125]} />
-      <Sky sunPosition={[30, 40, 20]} />
-      {/* Sky light baked from a CC0 HDRI into spherical harmonics (npm run assets): soft,
-          directional ambient for almost nothing — full image-based lighting was ~10 fps. */}
-      <lightProbe args={[SKY_PROBE, 1]} />
-      {/* A little warm bounce keeps ceilings and shaded rooms from going flat */}
-      <hemisphereLight args={['#ffffff', '#c9b99a', 0.3]} />
-      <SunLight />
+      {/* Sky, sun, ambient light and fog colour for the time of day */}
+      <Atmosphere />
 
       {/* timeStep="vary": one physics step per rendered frame, so the kinematic
           character controller always reads an up-to-date position. */}
@@ -48,6 +39,7 @@ export function World() {
         {/* Static props/blocks below are drawn as shared InstancedMeshes */}
         <BatchProvider>
           <Campus />
+          <Lamps />
           <Gate />
           <Building />
           {/* Zones the player can't see from where they stand are hidden (world/layers.tsx). */}

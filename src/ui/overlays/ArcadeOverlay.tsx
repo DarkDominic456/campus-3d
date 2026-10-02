@@ -4,6 +4,8 @@ import { GAMES, gameMeta, type GameId } from '../../minigames/registry'
 import { scores, type ScoreEntry, type SubmitScoreResult } from '../../services/scores'
 import { useGameStore, type OverlayPropsMap } from '../../store/useGameStore'
 import { displayName } from '../../services/auth'
+import { playSound } from '../../audio/audio'
+import { useTourStore } from '../../tour/tour'
 
 /** Current player's identity for scores: their account, or the shared 'guest' slot. */
 function usePlayerId() {
@@ -105,7 +107,9 @@ function GameHost({ id, onBack }: { id: GameId; onBack: () => void }) {
 
   const onGameOver = useCallback(
     (score: number) => {
+      useTourStore.getState().complete('arcade')
       scores.submit({ gameId: id, userId, name, score }).then((r) => {
+        playSound(r.isNewBest ? 'achievement' : 'good', { volume: 0.6 })
         setResult({ ...r, score })
         setBest(r.best)
       })

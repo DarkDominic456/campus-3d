@@ -71,7 +71,9 @@ function BasketballCourt() {
       {/* Hoop: pole, arm, backboard, ring */}
       <Block position={[cx, 1.75, hoopZ - 1.2]} size={[0.2, 3.5, 0.2]} color="#334155" />
       <Block position={[cx, 3.4, hoopZ - 0.65]} size={[0.12, 0.12, 1.1]} color="#334155" />
-      <Block position={[cx, 3.35, hoopZ - 0.1]} size={[1.8, 1.05, 0.06]} color="#f8fafc" />
+      <Block position={[cx, 3.35, hoopZ - 0.1]} size={[1.8, 1.05, 0.06]} color="#f8fafc" collide={false} />
+      {/* Tagged so the ball can tell the backboard (plate sound) from the ground */}
+      <BoxColliders boxes={[{ position: [cx, 3.35, hoopZ - 0.1], size: [1.8, 1.05, 0.06] }]} userData={{ backboard: true }} />
       <mesh position={[cx, 3.05, hoopZ + 0.2]} rotation-x={Math.PI / 2}>
         <torusGeometry args={[0.23, 0.02, 8, 24]} />
         <meshStandardMaterial color="#f97316" />

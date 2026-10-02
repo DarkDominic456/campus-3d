@@ -88,8 +88,8 @@ export function Building() {
 
       {/* ---------- Floors ---------- */}
       <Floor position={[0, 0.02, (minZ + maxZ) / 2]} size={[HALL.maxX - HALL.minX, maxZ - minZ]} surface="tiles" />
-      <Floor position={[0, 0.02, maxZ + 1.5]} size={[6, 3]} color="#a8a29e" />
-      <Floor position={[0, 0.02, minZ - 1.5]} size={[6, 3]} color="#a8a29e" />
+      <Floor position={[0, 0.02, maxZ + 1.5]} size={[6, 3]} color="#d6d0c8" surface="pavers" />
+      <Floor position={[0, 0.02, minZ - 1.5]} size={[6, 3]} color="#d6d0c8" surface="pavers" />
 
       {/* ---------- Hall furniture ---------- */}
       <Plant position={[-3.3, 0, 9.2]} />

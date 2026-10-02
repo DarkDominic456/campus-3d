@@ -9,8 +9,9 @@ or mini games. Built in phases — **stop after each phase and wait for the user
 - `npm run dev` — dev server on http://localhost:5173
 - `npm run assets` — rebuild `public/models/`, `public/textures/` and `src/world/skyProbe.json`
   from `assets-src/` (run after adding/changing a model or texture)
-- `node scripts/fetch-sources.mjs [textures] [hdri] [models]` — download the git-ignored CC0
-  sources (Poly Haven / ambientCG textures, sky HDRI, Poly Haven furniture) into `assets-src/`
+- `node scripts/fetch-sources.mjs [textures] [hdri] [models] [characters] [audio]` — download the git-ignored CC0
+  sources (Poly Haven / ambientCG textures, sky HDRI, Poly Haven furniture, Quaternius
+  characters, Kenney audio) into `assets-src/`
 - `?bench=1` (dev or prod) — flies through fixed spots and shows fps / draw calls / triangles
 - `npm run build` — typecheck (`tsc -b`) + production build
 - `npm run typecheck` — typecheck only
@@ -175,6 +176,38 @@ Vite 8, React 19, TypeScript 7, three 0.186, @react-three/fiber 9, @react-three/
     thinned presets, leaf normals point out of the canopy) → `public/models/trees/`.
   - Batched props are split into 32 m cells so each InstancedMesh can be frustum-culled
     (one campus-wide tree mesh was drawn everywhere, incl. the shadow pass).
+- **Audio** (Phase 8, `audio/`): `audio.ts` is pure Web Audio (no three). Samples are Kenney
+  CC0 .ogg listed in `audio/sounds.json` → `npm run assets` (scripts/build-audio.mjs) decodes,
+  mixes to mono, normalises and encodes 48 kbps MP3 into `public/audio/` (~90 KB; ogg isn't
+  decodable on older Safari). `playSound(name)` picks a random variant ±6 % pitch;
+  `playSoundAt(name, x, y, z)` adds distance fall-off + stereo pan from `audioListener` (camera,
+  synced by `AudioSystem`). Nothing plays until `enableAudio()` (3D only) sees a first key /
+  pointer press; the 2D site never enables it, so shared UI can call playSound safely.
+  Ambience is synthesised (brown-noise wind with gusts, bird chirps by day, crickets at night),
+  low-passed indoors (`INDOOR_ZONE_IDS` in zoneConfig). `AudioSystem` (in the Canvas) plays the
+  player's footsteps by `surfaceAt()` (indoor zone floor, `layout.PATHS`, courts, else grass)
+  every 0.84 m walking / 1.04 m running, and a landing thump. Sports call playSound on
+  kicks / bat / rim / bounces (volume by impact speed); `sportStore.flash(tone)` chimes.
+  `UiSounds` clicks on overlay open / close and "Press E" prompts.
+- **Settings** (`settings/settings.ts`, `ui/overlays/SettingsOverlay.tsx`): muted, volume,
+  ambience, time of day ('day' | 'sunset' | 'night' | 'auto' = local clock via
+  `useTimeOfDay()`), saved in localStorage. HUD has a mute button and a Settings button.
+- **Time of day** (`world/Atmosphere.tsx`, presets in `world/atmospherePresets.ts` — not
+  `atmosphere.ts`: on Windows it collides with Atmosphere.tsx): eases `atmosphereRuntime`
+  (sun offset / colour / intensity, probe + hemisphere, fog, sky colours, lamps) towards the
+  preset; SunLight, SkyDome and Lamps read it each frame. Indoors at night the "room lights"
+  come on (brighter warm hemisphere). `SkyDome` is a cheap gradient sphere (horizon = fog
+  colour, sun / moon glow) — drei's Preetham `<Sky>` cost ~5–8 fps outdoors. Night adds drei
+  `<Stars>`. `parts/Lamps.tsx`: lamp posts with a glowing head and an additive light pool on
+  the ground (no real point lights).
+- **Guided tour** (`tour/`): `tour.ts` = 6 steps (account, classroom, arcade, sport, profile,
+  presentation) with a beacon target and a "take me there" spot; progress in localStorage;
+  steps complete in any order, even while the tour is hidden. `TourTracker` completes steps
+  from store changes (user set, focus ids, profile overlay, sport result); ArcadeOverlay
+  completes 'arcade'. `TourGuide` (Canvas) draws a light beacon at the step target and a
+  chevron at the player's feet pointing to `guideWaypoint()` (door / stairs / target).
+  `ui/hud/TourPanel.tsx` under the location badge (collapsible; collapsed on touch). Offered
+  from the welcome card (ControlsHint) and Settings.
 - **Mount order matters**: in `World.tsx`, `<Player />` is before `<ThirdPersonCamera />`
   so the camera follows the same frame's position.
 - **Player visuals are separate from physics**: `PlayerModel.tsx` (origin at feet,
@@ -241,6 +274,10 @@ src/
   npc/                   StaticNpc (+ seatPosition), WalkingNpc, WalkingNpcs (routes), variants
   minigames/             registry (GameId, GameProps, lazy components), snake/, puzzle/
                          (sliding 3×3 / 4×4), paint/ (paint-by-numbers + pictures)
+  audio/                 audio.ts (Web Audio: samples, positional sfx, synthesised ambience),
+                         sounds.json, AudioSystem (listener + footsteps), UiSounds
+  settings/              settings.ts (sound, time of day; localStorage)
+  tour/                  tour.ts (steps + store), TourTracker, TourGuide (beacon + arrow)
   minigames/sports/      sportStore (+ sportRuntime), config (spots, cameras, hoop/goal/pitch),
                          SportController (lifecycle, startSport, useSportAction),
                          Basketball, Football, Cricket (3D, mounted in OutdoorGround)
@@ -292,6 +329,14 @@ for their collision boxes.
 with `<Model name=… position rotationY />` (+ a `BoxColliders` box). Check facing in-game: props
 face +Z at rotationY 0.
 
+**Add a sound** — copy the CC0 .ogg into `assets-src/audio/<pack>/` (or add the pack to
+`AUDIO_PACKS` in fetch-sources.mjs), list it in `src/audio/sounds.json` (name → variants), run
+`npm run assets`, then `playSound('name')` / `playSoundAt('name', x, y, z)`.
+
+**Add a tour step** — add an id to `TourStepId` and an entry to `TOUR_STEPS` (`tour/tour.ts`:
+title, hint, beacon `target`, "take me there" `spot`), then call
+`useTourStore.getState().complete(id)` where it happens (or watch a store in `TourTracker`).
+
 **Add an NPC** — `<StaticNpc variant position facing animation />` (seated: position from
 `seatPosition(x, seatHeight, z)`), or add a route to `ROUTES` in `npc/WalkingNpcs.tsx`.
 Wrap in `<Suspense fallback={null}>` so loading never blocks colliders.
@@ -324,6 +369,17 @@ Wrap in `<Suspense fallback={null}>` so loading never blocks colliders.
 - [x] **Phase 6** — outdoor sports mini games (basketball, football, cricket), 30–60 s rounds.
 - [x] **Phase 7** — mobile joystick (writes `externalInput`), 2D fallback mode, performance pass,
       loading screen, Vercel deploy, code-splitting (bundle is ~1.2 MB gzip, mostly Rapier WASM).
+- [x] **Round 2** — email/password signup + office profile desk, performance pass, semi-realistic
+      textures / furniture / trees, Quaternius characters with procedural poses.
+- [x] **Phase 8** — guided first-visit tour (steps, beacon, arrow), sound (footsteps, sports,
+      UI, synthesised ambience), day / sunset / night, Settings panel.
+- [ ] **Phase 9** — multiplayer presence: other visitors, name tags, emotes, chat, profile cards.
+- [ ] **Phase 10** — conference-room live sessions (schedule, live now, video on the screen, join).
+- [ ] **Phase 11** — Hindi / English, accessibility pass, installable PWA.
+- [ ] **Phase 12** — real URLs + Open Graph previews for 2D pages, opt-in privacy-friendly analytics.
+- [ ] **Phase 13** — Playwright e2e in CI, zone plugin structure.
+- Deferred (user's call): Supabase backend; real learning content (the user writes it or
+  collaborates — never copy third-party course material).
 
 ## Known limits / TODO
 - Auth, scores, learning progress and the demo form are localStorage / console mocks

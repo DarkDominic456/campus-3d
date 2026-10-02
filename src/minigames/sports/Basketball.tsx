@@ -5,6 +5,7 @@ import { MathUtils, Vector3, type Object3D, type Vector3Tuple } from 'three'
 import { pingPong, sportRuntime, useSportStore } from './sportStore'
 import { playSportPose, useSportAction } from './SportController'
 import { BASKETBALL_SPOT, HOOP } from './config'
+import { playSoundAt } from '../../audio/audio'
 
 const GRAVITY = 20 // matches <Physics gravity> in World.tsx
 const LAUNCH_ANGLE = (55 * Math.PI) / 180
@@ -181,7 +182,15 @@ function Ball({ shot, onRim, onMesh }: { shot: Shot; onRim: () => void; onMesh: 
       ccd
       userData={{ basketball: shot.id }}
       onCollisionEnter={({ other }) => {
-        if (other.rigidBodyObject?.userData?.rim) onRim()
+        const rim = other.rigidBodyObject?.userData?.rim
+        if (rim) onRim()
+        const b = body.current
+        if (!b) return
+        const v = b.linvel()
+        const p = b.translation()
+        const speed = Math.hypot(v.x, v.y, v.z)
+        const sound = rim ? 'rim' : other.rigidBodyObject?.userData?.backboard ? 'backboard' : 'ball-bounce'
+        playSoundAt(sound, p.x, p.y, p.z, { volume: Math.min(1, speed / 8) })
       }}
     >
       <BallCollider args={[BALL_RADIUS]} restitution={0.7} friction={0.5} density={0.5} />

@@ -5,7 +5,7 @@ import { BoxColliders } from '../parts/BoxColliders'
 import { Hedge } from '../parts/Hedge'
 import { Trees } from '../parts/Trees'
 import { Floor } from '../parts/Props'
-import { BUILDING, COURTS, GATE_Z, WORLD } from '../layout'
+import { BUILDING, GATE_Z, PATHS, WORLD } from '../layout'
 
 const PATH = '#e7e2dc' // tint of the paver texture
 
@@ -36,9 +36,6 @@ const FLOWERS = (name: 'red' | 'yellow'): ModelPlacement[] =>
 
 /** Shared outdoor dressing: world boundary, paths, trees, bushes, flowers. */
 export function Campus() {
-  const { basketball, cricket, football } = COURTS
-  const crossZ = -28
-
   return (
     <group>
       {/* World boundary */}
@@ -47,15 +44,17 @@ export function Campus() {
       <Hedge axis="z" at={WORLD.minX} from={WORLD.minZ} to={WORLD.maxZ} />
       <Hedge axis="z" at={WORLD.maxX} from={WORLD.minZ} to={WORLD.maxZ} />
 
-      {/* Front path: gate → building */}
-      <Floor position={[0, 0.015, (BUILDING.maxZ + WORLD.maxZ) / 2]} size={[6, WORLD.maxZ - BUILDING.maxZ]} color={PATH} surface="pavers" />
-      <Floor position={[0, 0.016, GATE_Z]} size={[9.2, 3]} color="#c9c1b8" surface="pavers" />
-
-      {/* Back path: building → sports, with a cross path to each court */}
-      <Floor position={[0, 0.015, (BUILDING.minZ + football.cz + football.d / 2) / 2]} size={[4, BUILDING.minZ - (football.cz + football.d / 2)]} color={PATH} surface="pavers" />
-      <Floor position={[(basketball.cx + cricket.cx) / 2, 0.016, crossZ]} size={[cricket.cx - basketball.cx, 3]} color={PATH} surface="pavers" />
-      <Floor position={[basketball.cx, 0.015, (crossZ + basketball.cz + basketball.d / 2) / 2]} size={[3, crossZ - (basketball.cz + basketball.d / 2)]} color={PATH} surface="pavers" />
-      <Floor position={[cricket.cx, 0.015, (crossZ + cricket.cz + cricket.r) / 2]} size={[3, crossZ - (cricket.cz + cricket.r)]} color={PATH} surface="pavers" />
+      {/* Paths: gate → building, building → sports, a cross path to each court (layout.PATHS) */}
+      {PATHS.map((p, i) => (
+        <Floor
+          key={i}
+          // Alternate heights a hair apart so crossing paths don't z-fight.
+          position={[p.cx, 0.015 + (i % 2) * 0.001, p.cz]}
+          size={[p.w, p.d]}
+          color={i === 1 ? '#c9c1b8' : PATH}
+          surface="pavers"
+        />
+      ))}
 
       <Trees positions={TREES} />
 

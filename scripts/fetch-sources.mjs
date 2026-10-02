@@ -2,7 +2,7 @@
  * Downloads the CC0 source textures, HDRI and Poly Haven furniture into assets-src/ (git-ignored: only the
  * converted outputs in public/ are committed). Then `npm run assets` converts them for the web.
  *
- *   node scripts/fetch-sources.mjs [textures] [hdri] [models] [characters]   (default: all)
+ *   node scripts/fetch-sources.mjs [textures] [hdri] [models] [characters] [audio]   (default: all)
  *
  * Sources: Poly Haven (https://polyhaven.com) and ambientCG (https://ambientcg.com), both CC0.
  * Needs `unzip` (macOS / Linux / Git Bash) or `tar` (Windows 10+) for ambientCG zips.
@@ -96,6 +96,32 @@ export const CHARACTER_SOURCES = {
   'female-e': { id: 'djXoqejw6w', title: 'Punk' },
 }
 
+/** Kenney CC0 audio packs → assets-src/audio/<pack>/ (only the .ogg files + License.txt). */
+export const AUDIO_PACKS = ['impact-sounds', 'interface-sounds']
+
+async function kenneyAudio(pack) {
+  const page = await (await fetch(`https://kenney.nl/assets/${pack}`, { headers: { 'user-agent': 'Mozilla/5.0' } })).text()
+  const url = page.match(/https:\/\/kenney\.nl\/media\/pages\/assets\/[^"]+\.zip/)?.[0]
+  if (!url) throw new Error(`kenney.nl ${pack}: no zip link found`)
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'kenney-'))
+  const zip = path.join(tmp, `${pack}.zip`)
+  await download(url, zip)
+  try {
+    execFileSync('unzip', ['-o', '-q', zip, '-d', tmp])
+  } catch {
+    execFileSync('tar', ['-xf', zip, '-C', tmp])
+  }
+  const dir = path.join(ROOT, 'assets-src', 'audio', pack)
+  await fs.mkdir(dir, { recursive: true })
+  for (const file of await fs.readdir(path.join(tmp, 'Audio'))) await fs.copyFile(path.join(tmp, 'Audio', file), path.join(dir, file))
+  await fs.copyFile(path.join(tmp, 'License.txt'), path.join(dir, 'License.txt'))
+  await fs.writeFile(path.join(dir, 'SOURCE.txt'), `Kenney ${pack}
+https://kenney.nl/assets/${pack}
+License: CC0 1.0 (public domain)
+`)
+  await fs.rm(tmp, { recursive: true, force: true })
+}
+
 async function polyPizzaModel(variant, { id, title }) {
   const dir = path.join(ROOT, 'assets-src', 'quaternius')
   const page = await (await fetch(`https://poly.pizza/m/${id}`, { headers: { 'user-agent': 'Mozilla/5.0' } })).text()
@@ -144,6 +170,13 @@ if (want('hdri')) {
     `${HDRI.id}\nhttps://polyhaven.com/a/${HDRI.id}\nLicense: CC0 1.0 (public domain)\n`,
   )
   console.log(`hdri             ← polyhaven/${HDRI.id}`)
+}
+
+if (want('audio')) {
+  for (const pack of AUDIO_PACKS) {
+    await kenneyAudio(pack)
+    console.log(`audio            ← kenney/${pack}`)
+  }
 }
 
 if (want('characters')) {

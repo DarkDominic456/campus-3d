@@ -3,8 +3,8 @@ import { useFrame, useThree } from '@react-three/fiber'
 import type { DirectionalLight } from 'three'
 import { playerRuntime } from '../player/playerRuntime'
 import { useGameStore } from '../store/useGameStore'
+import { atmosphereRuntime } from './atmospherePresets'
 
-const OFFSET = { x: 15, y: 25, z: 10 }
 const SHADOW_EXTENT = 25
 
 /**
@@ -43,14 +43,17 @@ export function SunLight() {
     // Snap to whole meters to reduce shadow shimmering while moving.
     const x = Math.round(p.x)
     const z = Math.round(p.z)
-    l.position.set(x + OFFSET.x, OFFSET.y, z + OFFSET.z)
+    // Sun (or moon) offset and colour come from the time of day (Atmosphere eases them).
+    const sun = atmosphereRuntime.sun
+    l.position.set(x + sun.x, sun.y, z + sun.z)
+    l.intensity = atmosphereRuntime.sunIntensity
+    l.color.copy(atmosphereRuntime.sunColor)
     l.target.position.set(x, 0, z)
   })
 
   return (
     <directionalLight
       ref={light}
-      intensity={1.8}
       castShadow={shadows}
       shadow-mapSize={[1024, 1024]}
       shadow-camera-left={-SHADOW_EXTENT}

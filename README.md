@@ -28,6 +28,7 @@ backend. See [CONTRIBUTING.md](CONTRIBUTING.md) and the [roadmap](#roadmap).
 | **Gaming room** | Arcade cabinets and a console: **Snake**, **Sliding Puzzle**, **Paint-by-Numbers**, with per-user high scores and a leaderboard. |
 | **Office (1st floor)** | Reception: **Request a demo** form and **pricing**. **PROFILE desk**: photo, name, contact number, tagline, location, about, career summary, 3D avatar, change email / password. |
 | **Conference room** | Slides rendered on the wall screen (← → to change slide). |
+| **Anywhere** | A **guided tour** for first-time visitors (six steps, a glowing beacon and an arrow at your feet), and **Settings** for sound and **day / sunset / night**. |
 | **Outdoor ground** | **Basketball** (aim + power meters, real ball physics), **football penalties** against a diving keeper, **cricket batting** with timing (SIX / FOUR / edge). Rounds are 30–60 s. |
 
 Students type at laptops, gamers play on the sofa, office staff work at desks, and people
@@ -43,6 +44,18 @@ walk around and stop to look at you.
   - Sky-based lighting, real furniture models and procedurally generated trees.
   - Characters are Quaternius CC0 humans. Their sitting / typing / gaming / jumping poses are
     generated in code.
+- **Guided first visit**: an optional six-step tour (sign up, sit in class, play a game and a
+  sport, set up your profile, watch the presentation) with a light beacon at each goal, an
+  arrow that routes you through doors and up the stairs, "take me there", and saved progress.
+- **Sound**:
+  - Footsteps that change with the floor (grass, paving, wood, carpet).
+  - Ball, bat, rim and net sounds; UI clicks.
+  - Synthesised ambience: wind, birds by day, crickets at night, muffled indoors.
+  - Mute button and volume in Settings.
+- **Day, sunset and night**:
+  - Sky, sun / moon and fog fade between times of day.
+  - Street lamps light the paths at night, and the room lights come on indoors.
+  - "My clock" follows your local time.
 - **HUD**:
   - Current location and a minimap (click to teleport).
   - Teleport menu (T) and controls help (H).
@@ -104,7 +117,7 @@ npm run build        # typecheck + production build → dist/
 npm run preview      # serve the production build
 npm run typecheck
 npm run assets       # rebuild public/models, public/textures and the sky light probe
-node scripts/fetch-sources.mjs [textures] [hdri] [models] [characters]
+node scripts/fetch-sources.mjs [textures] [hdri] [models] [characters] [audio]
                      # download the (git-ignored) CC0 sources the asset pipeline needs
 ```
 
@@ -179,8 +192,7 @@ Ideas that would make the campus more useful. Issues and PRs welcome.
    the gaming room, and a public profile page (`#/u/<name>`).
 5. **Live sessions**: the conference room as a real meeting space (scheduled talks, screen
    sharing, a video embed on the wall screen).
-6. **Guided first visit**: a short quest that walks new visitors through the campus, plus
-   audio (footsteps, ambience, ball sounds) and a day / night cycle.
+6. ~~**Guided first visit**, audio and day / night~~: done (Phase 8).
 7. **Accessibility and reach**: keyboard-only and screen-reader friendly overlays, Hindi /
    English (i18n), installable PWA, better low-end mobile performance.
 8. **Sharing and analytics**: real URLs and Open Graph previews for 2D pages, plus
@@ -205,6 +217,8 @@ host works. On Vercel, import the GitHub repo and it deploys on every push to `m
 - Trees: generated with [EZ-Tree](https://github.com/dgreenheck/ez-tree) by Daniel Greenheck
   (MIT). Its bark textures are CC0.
 - Flowers and small props: [Kenney](https://kenney.nl) Nature Kit (CC0).
+- Sound effects: [Kenney](https://kenney.nl) Impact Sounds and Interface Sounds (CC0). The
+  ambience is synthesised in the browser.
 
 Kenney licenses are in `assets-src/`. The other sources are downloaded by
 `node scripts/fetch-sources.mjs`, each with a `SOURCE.txt`.

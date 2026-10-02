@@ -4,6 +4,7 @@ import { Group, MathUtils, Mesh, Vector3 } from 'three'
 import { sportRuntime, useSportStore } from './sportStore'
 import { playSportPose, useSportAction } from './SportController'
 import { BATTER_SPOT, CRICKET } from './config'
+import { playSound } from '../../audio/audio'
 
 const GRAVITY = 20
 const BALL_RADIUS = 0.07
@@ -92,6 +93,7 @@ export function CricketGame() {
       st.pos.addScaledVector(st.vel, dt)
       if (st.pos.y < BALL_RADIUS && st.vel.y < 0) {
         st.pos.y = BALL_RADIUS
+        playSound('ball-soft', { volume: Math.min(1, Math.abs(st.vel.y) / 8) })
         st.vel.y = -st.vel.y * BOUNCE
         if (st.mode === 'hit') st.vel.multiplyScalar(0.8) // grass slows it down
       }
@@ -104,6 +106,7 @@ export function CricketGame() {
       if (st.pos.z >= CRICKET.stumpsZ) {
         const hitStumps = Math.abs(st.pos.x - CRICKET.x) < 0.14 && st.pos.y < 0.75
         if (hitStumps) {
+          playSound('stumps', { volume: 0.9 })
           st.wickets += 1
           updateStat()
           useSportStore.getState().flash('Bowled!', 'bad')
@@ -144,6 +147,7 @@ export function CricketGame() {
     const error = Math.abs((HIT_Z - st.pos.z) / st.vel.z)
     if (error > WINDOW.edge) return // swing and a miss — the ball carries on to the stumps
 
+    playSound('bat', { volume: error <= WINDOW.four ? 1 : 0.6 })
     const { addScore, flash } = useSportStore.getState()
     const angle = MathUtils.randFloat(-0.9, 0.9) // around straight back past the bowler (−Z)
     let speed: number

@@ -22,6 +22,8 @@ export interface OverlayPropsMap {
   arcade: { game?: GameId }
   /** Office profile desk / HUD user chip: edit profile, email, password. */
   profile: Record<string, never>
+  /** HUD → Settings: sound, time of day, tour. */
+  settings: Record<string, never>
 }
 export type OverlayId = keyof OverlayPropsMap
 

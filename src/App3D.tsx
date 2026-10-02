@@ -15,12 +15,19 @@ import { LoadingView } from './ui/LoadingView'
 import { SlowDeviceBanner } from './ui/SlowDeviceBanner'
 import { useIsTouch } from './ui/touch'
 import { TeleportBridge } from './player/TeleportBridge'
+import { AudioSystem } from './audio/AudioSystem'
+import { UiSounds } from './audio/UiSounds'
+import { audioStatus } from './audio/audio'
+import { useSettings } from './settings/settings'
+import { useTourStore } from './tour/tour'
+import { TourGuide } from './tour/TourGuide'
+import { TourTracker } from './tour/TourTracker'
 import { Bench, BenchTable, benchEnabled } from './world/Bench'
 
 // Dev-only handle for debugging / automated browser checks (renderer is added in onCreated).
 if (import.meta.env.DEV) {
   Object.assign(window, {
-    __game: { store: useGameStore, playerRuntime, teleportTo, sport: { store: useSportStore, runtime: sportRuntime } },
+    __game: { store: useGameStore, playerRuntime, teleportTo, sport: { store: useSportStore, runtime: sportRuntime }, audioStatus, settings: useSettings, tour: useTourStore },
   })
 }
 
@@ -64,12 +71,16 @@ export default function App3D() {
         <Suspense fallback={null}>
           <World />
         </Suspense>
+        <AudioSystem />
+        <TourGuide />
         {benchEnabled() && <Bench />}
       </Canvas>
       <InteractionManager />
       <ZoneTracker />
       <SportController />
       <TeleportBridge />
+      <TourTracker />
+      <UiSounds />
       <UILayer />
       <LoadingScreen />
       <SlowDeviceBanner />

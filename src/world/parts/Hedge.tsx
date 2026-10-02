@@ -14,7 +14,7 @@ export function Hedge({ axis, at, from, to }: { axis: 'x' | 'z'; at: number; fro
   return (
     <RigidBody type="fixed" colliders={false} position={pos}>
       <CuboidCollider args={[size[0] / 2, COLLIDER_H / 2, size[2] / 2]} position={[0, COLLIDER_H / 2, 0]} />
-      <Block position={[0, VISIBLE_H / 2, 0]} size={size} color="#2f6b3a" collide={false} />
+      <Block position={[0, VISIBLE_H / 2, 0]} size={size} color="#6f9a5e" surface="grass" collide={false} />
     </RigidBody>
   )
 }

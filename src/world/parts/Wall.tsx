@@ -1,6 +1,7 @@
 import { Block } from './Block'
 import { BoxColliders } from './BoxColliders'
 import { WALL_T } from '../layout'
+import type { Surface } from './surfaces'
 
 export interface Opening {
   /** Center of the opening along the wall. */
@@ -27,7 +28,15 @@ interface WallProps {
    */
   openings?: Opening[]
   color?: string
+  surface?: Surface
+  /**
+   * Visual-only finish on one face (e.g. plaster inside a brick outer wall): `side` = the
+   * direction (along the wall's normal axis) the lined face points to.
+   */
+  lining?: { side: 1 | -1; color?: string; surface?: Surface }
 }
+
+const LINING_T = 0.02
 
 interface Piece {
   a: number
@@ -37,7 +46,7 @@ interface Piece {
 }
 
 /** Axis-aligned wall split into boxes around door/window openings. */
-export function Wall({ axis, at, from, to, y0 = 0, height, thickness = WALL_T, openings = [], color = '#f1ece2' }: WallProps) {
+export function Wall({ axis, at, from, to, y0 = 0, height, thickness = WALL_T, openings = [], color = '#f1ece2', surface, lining }: WallProps) {
   const columns = new Map<string, Opening[]>()
   for (const o of openings) {
     const key = `${o.center}:${o.width}`
@@ -90,9 +99,29 @@ export function Wall({ axis, at, from, to, y0 = 0, height, thickness = WALL_T, o
             position={axis === 'x' ? [mid, y, at] : [at, y, mid]}
             size={axis === 'x' ? [len, h, thickness] : [thickness, h, len]}
             color={color}
+            surface={surface}
           />
         )
       })}
+      {lining &&
+        pieces.map((p, i) => {
+          const len = p.b - p.a
+          const mid = (p.a + p.b) / 2
+          const h = p.top - p.bottom
+          const y = y0 + p.bottom + h / 2
+          const off = at + lining.side * (thickness / 2 + LINING_T / 2 + 0.001)
+          return (
+            <Block
+              key={`l${i}`}
+              position={axis === 'x' ? [mid, y, off] : [off, y, mid]}
+              size={axis === 'x' ? [len, h, LINING_T] : [LINING_T, h, len]}
+              color={lining.color}
+              surface={lining.surface}
+              castShadow={false}
+              collide={false}
+            />
+          )
+        })}
     </>
   )
 }

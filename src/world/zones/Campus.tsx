@@ -7,7 +7,7 @@ import { Trees } from '../parts/Trees'
 import { Floor } from '../parts/Props'
 import { BUILDING, COURTS, GATE_Z, WORLD } from '../layout'
 
-const PATH = '#d6d3d1'
+const PATH = '#e7e2dc' // tint of the paver texture
 
 const TREES: Vector3Tuple[] = [
   // front plaza, either side of the path
@@ -48,14 +48,14 @@ export function Campus() {
       <Hedge axis="z" at={WORLD.maxX} from={WORLD.minZ} to={WORLD.maxZ} />
 
       {/* Front path: gate → building */}
-      <Floor position={[0, 0.015, (BUILDING.maxZ + WORLD.maxZ) / 2]} size={[6, WORLD.maxZ - BUILDING.maxZ]} color={PATH} />
-      <Floor position={[0, 0.016, GATE_Z]} size={[9.2, 3]} color="#a8a29e" />
+      <Floor position={[0, 0.015, (BUILDING.maxZ + WORLD.maxZ) / 2]} size={[6, WORLD.maxZ - BUILDING.maxZ]} color={PATH} surface="pavers" />
+      <Floor position={[0, 0.016, GATE_Z]} size={[9.2, 3]} color="#c9c1b8" surface="pavers" />
 
       {/* Back path: building → sports, with a cross path to each court */}
-      <Floor position={[0, 0.015, (BUILDING.minZ + football.cz + football.d / 2) / 2]} size={[4, BUILDING.minZ - (football.cz + football.d / 2)]} color={PATH} />
-      <Floor position={[(basketball.cx + cricket.cx) / 2, 0.016, crossZ]} size={[cricket.cx - basketball.cx, 3]} color={PATH} />
-      <Floor position={[basketball.cx, 0.015, (crossZ + basketball.cz + basketball.d / 2) / 2]} size={[3, crossZ - (basketball.cz + basketball.d / 2)]} color={PATH} />
-      <Floor position={[cricket.cx, 0.015, (crossZ + cricket.cz + cricket.r) / 2]} size={[3, crossZ - (cricket.cz + cricket.r)]} color={PATH} />
+      <Floor position={[0, 0.015, (BUILDING.minZ + football.cz + football.d / 2) / 2]} size={[4, BUILDING.minZ - (football.cz + football.d / 2)]} color={PATH} surface="pavers" />
+      <Floor position={[(basketball.cx + cricket.cx) / 2, 0.016, crossZ]} size={[cricket.cx - basketball.cx, 3]} color={PATH} surface="pavers" />
+      <Floor position={[basketball.cx, 0.015, (crossZ + basketball.cz + basketball.d / 2) / 2]} size={[3, crossZ - (basketball.cz + basketball.d / 2)]} color={PATH} surface="pavers" />
+      <Floor position={[cricket.cx, 0.015, (crossZ + cricket.cz + cricket.r) / 2]} size={[3, crossZ - (cricket.cz + cricket.r)]} color={PATH} surface="pavers" />
 
       <Trees positions={TREES} />
 
@@ -66,7 +66,7 @@ export function Campus() {
         }))}
       />
       <Suspense fallback={null}>
-        <ModelInstances name="plant_bushLarge" items={BUSHES} />
+        <ModelInstances name="bush" items={BUSHES} />
         <ModelInstances name="flower_redA" items={FLOWERS('red')} castShadow={false} />
         <ModelInstances name="flower_yellowA" items={FLOWERS('yellow')} castShadow={false} />
       </Suspense>

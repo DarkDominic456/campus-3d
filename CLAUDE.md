@@ -7,7 +7,11 @@ or mini games. Built in phases — **stop after each phase and wait for the user
 
 ## Commands
 - `npm run dev` — dev server on http://localhost:5173
-- `npm run assets` — rebuild `public/models/` from `assets-src/` (run after adding/changing a model)
+- `npm run assets` — rebuild `public/models/`, `public/textures/` and `src/world/skyProbe.json`
+  from `assets-src/` (run after adding/changing a model or texture)
+- `node scripts/fetch-sources.mjs [textures] [hdri] [models]` — download the git-ignored CC0
+  sources (Poly Haven / ambientCG textures, sky HDRI, Poly Haven furniture) into `assets-src/`
+- `?bench=1` (dev or prod) — flies through fixed spots and shows fps / draw calls / triangles
 - `npm run build` — typecheck (`tsc -b`) + production build
 - `npm run typecheck` — typecheck only
 - `npm run preview` — serve the production build
@@ -130,6 +134,32 @@ Vite 8, React 19, TypeScript 7, three 0.186, @react-three/fiber 9, @react-three/
 - **Deploy**: static build (`dist/`), `vercel.json` sets long-cache headers for hashed
   `/assets` and a 1-day cache for `/models` (not content-hashed — bump filenames if a model
   changes a lot). Hash routing, so no SPA rewrites are needed.
+- **Auth + profile** (round 2): signup = email + password + confirm (no OTP yet). The mock
+  stores PBKDF2-SHA256 hashes (WebCrypto, 150k iterations, per-user salt), never plaintext.
+  `User.profile` = displayName, photo (256² JPEG data URL ≤ ~80 KB, `utils/image.ts`), phone,
+  tagline, location, about, careerSummary; `displayName(user)` falls back to the email.
+  Profile is edited at the office **PROFILE desk** (`ProfileOverlay` / 2D `#/profile`): email is
+  read-only (change needs the password), password is masked + "Change password".
+  Overlays can set `closeGuard` (unsaved changes). 2D-shared UI asks for teleports with
+  `requestTeleport` (store) — `TeleportBridge` (3D only) performs them.
+- **Visibility layers** (`world/layers.tsx`): zones are wrapped in `<ZoneLayer layer=…>`
+  (groundInterior / firstInterior / outdoor); ZoneTracker hides layers the player can't see,
+  and batched instances remember their layer. Shadow map renders on demand (SunLight), NPCs
+  update at 1/3 rate beyond half the cull distance and hide beyond 45 m.
+- **Semi-realistic look** (round 2):
+  - `world/parts/surfaces.ts`: textured PBR surfaces (`surface="brick"` etc. on Block / Floor /
+    Wall, `surfaceMaterial()` for meshes). UVs are computed in the shader from world position
+    (box projection), so textures keep real scale on any box and batched instances need no
+    UVs; `color` tints. Normal maps only on outdoor surfaces (interior ones cost ~8 fps on Intel
+    UHD); grass / soil / asphalt get anti-tiling. Brick outer walls have a plaster `lining`.
+  - Lighting: the sky HDRI is baked to a 9-coefficient SH `lightProbe` (`skyProbe.json`) —
+    full `<Environment>` IBL measured ~10 fps slower.
+  - Furniture: Poly Haven CC0 models (`POLYHAVEN` in models.ts, real meters, scale 1),
+    simplified + WebP textures in the pipeline. Classroom set ×0.86 (desk 0.76 m, seat 0.42 m).
+  - Trees + bushes: generated at build time with EZ-Tree (MIT, `scripts/build-trees.mjs`,
+    thinned presets, leaf normals point out of the canopy) → `public/models/trees/`.
+  - Batched props are split into 32 m cells so each InstancedMesh can be frustum-culled
+    (one campus-wide tree mesh was drawn everywhere, incl. the shadow pass).
 - **Mount order matters**: in `World.tsx`, `<Player />` is before `<ThirdPersonCamera />`
   so the camera follows the same frame's position.
 - **Player visuals are separate from physics**: `PlayerModel.tsx` (origin at feet,
@@ -199,9 +229,13 @@ src/
   minigames/sports/      sportStore (+ sportRuntime), config (spots, cameras, hoop/goal/pitch),
                          SportController (lifecycle, startSport, useSportAction),
                          Basketball, Football, Cricket (3D, mounted in OutdoorGround)
-assets-src/              raw CC0 GLBs + licenses (Kenney packs) — inputs to `npm run assets`
-scripts/build-assets.mjs asset pipeline (gltf-transform)
-public/models/           generated, compressed GLBs (characters/, furniture/, nature/)
+assets-src/              raw CC0 GLBs + licenses (Kenney packs) — inputs to `npm run assets`;
+                         textures/, hdri/, polyhaven/ are git-ignored (fetch-sources.mjs)
+scripts/build-assets.mjs asset pipeline (gltf-transform, sharp): models, textures, sky probe
+scripts/build-trees.mjs  EZ-Tree → tree/bush GLBs (Node hooks in scripts/lib/)
+scripts/fetch-sources.mjs downloads the CC0 sources
+public/models/           generated, compressed GLBs (characters/, furniture/, nature/, polyhaven/, trees/)
+public/textures/         generated 512 px WebP surface textures
 ```
 
 ## Recipes
@@ -255,7 +289,7 @@ Wrap in `<Suspense fallback={null}>` so loading never blocks colliders.
 - UILayer container is `pointer-events-none`; interactive HTML must add `pointer-events-auto`.
 - **Colliders**: boxes/capsules only (`Block`, `CuboidCollider`, `CapsuleCollider`).
   Never mesh/trimesh colliders.
-- **Assets**: CC0 only (KayKit / Quaternius / Kenney), GLB, compressed with
+- **Assets**: CC0 only (KayKit / Quaternius / Kenney / Poly Haven / ambientCG; EZ-Tree is MIT), GLB, compressed with
   gltf-transform (Draco/meshopt), in `public/models/`. Initial load < ~15 MB.
   Keep placeholders swappable (visual component separate from physics).
 - **Performance**: target 60 fps on a mid-range laptop. Instancing for repeated

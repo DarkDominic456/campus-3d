@@ -15,7 +15,10 @@ import { BUILDING, HALL } from '../layout'
 const ROWS = [-12.5, -10, -7.5]
 const COLS = [-10, -6.5, -3, 0.5, 4]
 const SEAT_OFFSETS = [-0.37, 0.37]
-const DESK_TOP = 0.77
+/** Poly Haven's school set is high-school size (0.88 m desk); ×0.86 → 0.76 m desk, 0.42 m seat. */
+const SCHOOL_SCALE = 0.86
+const DESK_TOP = 0.76
+const TEACHER_DESK_TOP = 0.79
 const CHAIR_OFFSET_X = 0.72
 export const CHAIR_SEAT_HEIGHT = 0.42
 const FACE_WHITEBOARD = -Math.PI / 2
@@ -62,12 +65,12 @@ export function Classroom() {
     const seats: Seat[] = []
     for (const x of ROWS) {
       for (const z of COLS) {
-        desks.push({ position: [x, 0, z], rotationY: Math.PI / 2 })
         colliders.push({ position: [x, 0.39, z], size: [0.8, 0.78, 1.5] })
         // Chairs + seated students behind each desk: one box keeps the player out.
         colliders.push({ position: [x + CHAIR_OFFSET_X, 0.6, z], size: [0.46, 1.2, 1.2] })
         for (const dz of SEAT_OFFSETS) {
-          chairs.push({ position: [x + CHAIR_OFFSET_X, 0, z + dz], rotationY: FACE_WHITEBOARD })
+          desks.push({ position: [x, 0, z + dz], rotationY: Math.PI / 2, scale: SCHOOL_SCALE })
+          chairs.push({ position: [x + CHAIR_OFFSET_X, 0, z + dz], rotationY: FACE_WHITEBOARD, scale: SCHOOL_SCALE })
           laptops.push({ position: [x + 0.08, DESK_TOP, z + dz], rotationY: Math.PI / 2 })
           seats.push({ x: x + CHAIR_OFFSET_X, z: z + dz, index: seats.length })
         }
@@ -82,7 +85,7 @@ export function Classroom() {
 
   return (
     <group>
-      <Floor position={[(BUILDING.minX + HALL.minX) / 2, 0.02, midZ]} size={[HALL.minX - BUILDING.minX, BUILDING.maxZ - BUILDING.minZ]} color="#c8a27a" />
+      <Floor position={[(BUILDING.minX + HALL.minX) / 2, 0.02, midZ]} size={[HALL.minX - BUILDING.minX, BUILDING.maxZ - BUILDING.minZ]} surface="woodFloor" />
 
       {/* Whiteboard */}
       <Block position={[BUILDING.minX + 0.2, 1.9, -2]} size={[0.06, 1.5, 6]} color="#f8fafc" collide={false} />
@@ -92,22 +95,23 @@ export function Classroom() {
       <BoxColliders
         boxes={[
           ...layout.colliders,
-          { position: [-15.4, 0.39, -2], size: [0.8, 0.78, 1.5] }, // teacher desk
+          { position: [-15.4, 0.4, -2], size: [0.95, 0.8, 2] }, // teacher desk
           { position: [-12.2, 0.9, BUILDING.minZ + 0.45], size: [4.8, 1.8, 0.55] }, // bookcases
         ]}
       />
 
       <Suspense fallback={null}>
-        <ModelInstances name="desk" items={layout.desks} />
-        <ModelInstances name="chair" items={layout.chairs} />
+        {/* No shadows from the 60-piece school set: the room is lit through windows anyway. */}
+        <ModelInstances name="SchoolDesk_01" items={layout.desks} castShadow={false} />
+        <ModelInstances name="SchoolChair_01" items={layout.chairs} castShadow={false} />
         <ModelInstances name="laptop" items={layout.laptops} />
 
         {/* Teacher desk + monitor, bookcases on the back wall */}
-        <Model name="desk" position={[-15.4, 0, -2]} rotationY={-Math.PI / 2} />
-        <Model name="computerScreen" position={[-15.3, DESK_TOP, -2]} rotationY={-Math.PI / 2} />
+        <Model name="metal_office_desk" position={[-15.4, 0, -2]} rotationY={-Math.PI / 2} />
+        <Model name="computerScreen" position={[-15.3, TEACHER_DESK_TOP, -2]} rotationY={-Math.PI / 2} />
         <ModelInstances
-          name="bookcaseOpen"
-          items={[-14, -12.2, -10.4].map((x) => ({ position: [x, 0, BUILDING.minZ + 0.45] as Vector3Tuple }))}
+          name="wooden_display_shelves_01"
+          items={[-13.8, -12.2, -10.6].map((x) => ({ position: [x, 0, BUILDING.minZ + 0.35] as Vector3Tuple, rotationY: -Math.PI / 2 }))}
         />
 
         {/* NPC students (typing on laptops) and the teacher */}

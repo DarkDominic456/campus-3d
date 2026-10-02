@@ -1,5 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { Sky } from '@react-three/drei'
+import { SphericalHarmonics3, Vector3 } from 'three'
+import skyProbe from './skyProbe.json'
 import { Physics } from '@react-three/rapier'
 import { BatchProvider } from './parts/Batch'
 import { ReadySignal } from './ReadySignal'
@@ -20,6 +22,8 @@ import { ThirdPersonCamera } from '../player/ThirdPersonCamera'
 
 preloadModels()
 
+const SKY_PROBE = new SphericalHarmonics3().set(skyProbe.coefficients.map(([r, g, b]) => new Vector3(r, g, b)))
+
 // Heavy / far-away zones are code-split and stream in after the first frame.
 const OutdoorGround = lazy(() => import('./zones/OutdoorGround').then((m) => ({ default: m.OutdoorGround })))
 
@@ -30,9 +34,11 @@ export function World() {
       {/* Fog ends just inside the camera's far plane (App3D), so far geometry is culled unseen. */}
       <fog attach="fog" args={['#cfe3f7', 55, 125]} />
       <Sky sunPosition={[30, 40, 20]} />
-      {/* Warm ground bounce + a little ambient keep ceilings and shaded rooms from going black */}
-      <hemisphereLight args={['#ffffff', '#c9b99a', 1]} />
-      <ambientLight intensity={0.35} />
+      {/* Sky light baked from a CC0 HDRI into spherical harmonics (npm run assets): soft,
+          directional ambient for almost nothing — full image-based lighting was ~10 fps. */}
+      <lightProbe args={[SKY_PROBE, 1]} />
+      {/* A little warm bounce keeps ceilings and shaded rooms from going flat */}
+      <hemisphereLight args={['#ffffff', '#c9b99a', 0.3]} />
       <SunLight />
 
       {/* timeStep="vary": one physics step per rendered frame, so the kinematic

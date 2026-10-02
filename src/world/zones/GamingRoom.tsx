@@ -31,7 +31,7 @@ export function GamingRoom() {
 
   return (
     <group>
-      <Floor position={[(HALL.maxX + BUILDING.maxX) / 2, 0.02, midZ]} size={[BUILDING.maxX - HALL.maxX, BUILDING.maxZ - BUILDING.minZ]} color="#3f3f5a" />
+      <Floor position={[(HALL.maxX + BUILDING.maxX) / 2, 0.02, midZ]} size={[BUILDING.maxX - HALL.maxX, BUILDING.maxZ - BUILDING.minZ]} surface="carpetNavy" />
 
       <BoxColliders
         boxes={[
@@ -50,9 +50,9 @@ export function GamingRoom() {
         <Model name="televisionModern" position={[CABINET_X + 0.1, CABINET_TOP, TV_Z]} rotationY={FACE_ROOM} scale={1.6} />
         <Model name="speaker" position={[17.45, 0, TV_Z - 1.6]} rotationY={FACE_ROOM} />
         <Model name="speaker" position={[17.45, 0, TV_Z + 1.6]} rotationY={FACE_ROOM} />
-        <Model name="loungeSofa" position={[SOFA_X, 0, TV_Z]} rotationY={FACE_TV} scale={1.1} />
-        <Model name="loungeChair" position={[14.8, 0, -6]} rotationY={Math.PI * 0.75} scale={1.2} />
-        <Model name="loungeChair" position={[14.8, 0, 2]} rotationY={Math.PI * 0.25} scale={1.2} />
+        <Model name="sofa_02" position={[SOFA_X, 0, TV_Z]} rotationY={FACE_TV} />
+        <Model name="modern_arm_chair_01" position={[14.8, 0, -6]} rotationY={Math.PI * 0.75} />
+        <Model name="modern_arm_chair_01" position={[14.8, 0, 2]} rotationY={Math.PI * 0.25} />
 
         {/* Two players on the sofa, one at the arcade */}
         <StaticNpc variant="male-c" position={seatPosition(SOFA_X + 0.05, SOFA_SEAT_HEIGHT, TV_Z - 0.5)} facing={FACE_TV} animation="game" />

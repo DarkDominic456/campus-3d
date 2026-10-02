@@ -10,3 +10,8 @@ dist-ssr
 .DS_Store
 .vscode/*
 !.vscode/extensions.json
+
+# Large CC0 sources, re-downloadable with `node scripts/fetch-sources.mjs` (outputs in public/ are committed)
+assets-src/textures/
+assets-src/hdri/
+assets-src/polyhaven/

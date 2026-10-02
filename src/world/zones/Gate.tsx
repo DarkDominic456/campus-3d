@@ -16,9 +16,9 @@ export function Gate() {
   return (
     <group>
       {/* Arch */}
-      <Block position={[-PILLAR_X, 2.5, GATE_Z]} size={[1.2, 5, 1.2]} color="#78716c" />
-      <Block position={[PILLAR_X, 2.5, GATE_Z]} size={[1.2, 5, 1.2]} color="#78716c" />
-      <Block position={[0, 5.3, GATE_Z]} size={[PILLAR_X * 2 + 1.2, 0.8, 1.2]} color="#57534e" />
+      <Block position={[-PILLAR_X, 2.5, GATE_Z]} size={[1.2, 5, 1.2]} surface="brick" />
+      <Block position={[PILLAR_X, 2.5, GATE_Z]} size={[1.2, 5, 1.2]} surface="brick" />
+      <Block position={[0, 5.3, GATE_Z]} size={[PILLAR_X * 2 + 1.2, 0.8, 1.2]} color="#8a8580" surface="concrete" />
       <Sign text="WELCOME TO CAMPUS" position={[0, 5.3, GATE_Z + 0.63]} width={7} height={0.6} fontSize={0.42} background="#57534e" color="#fde68a" />
       <Sign text="CAMPUS" position={[0, 5.3, GATE_Z - 0.63]} rotationY={Math.PI} width={4} height={0.6} fontSize={0.42} background="#57534e" color="#fde68a" />
 

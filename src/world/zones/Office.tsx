@@ -13,7 +13,7 @@ import { BUILDING, FLOOR1_Y, HALL } from '../layout'
 
 const DESK_ZS = [-11, -6, -1, 4]
 const DESK_X = -16.4
-const DESK_TOP = 0.77
+const DESK_TOP = 0.79 // metal_office_desk
 const CHAIR_X = -15.55
 const OFFICE_CHAIR_SEAT = 0.5
 const FACE_WALL = -Math.PI / 2 // −X
@@ -32,7 +32,7 @@ export function Office() {
 
   return (
     <group position={[0, FLOOR1_Y, 0]}>
-      <Floor position={[(BUILDING.minX + HALL.minX) / 2, 0.01, midZ]} size={[HALL.minX - BUILDING.minX, BUILDING.maxZ - BUILDING.minZ]} color="#cfd8dc" />
+      <Floor position={[(BUILDING.minX + HALL.minX) / 2, 0.01, midZ]} size={[HALL.minX - BUILDING.minX, BUILDING.maxZ - BUILDING.minZ]} surface="woodFloorLight" />
 
       {/* Reception counter (custom block — no counter in the furniture kit) */}
       <Block position={[RECEPTION.x, 0.55, RECEPTION.z]} size={[0.9, 1.1, 3.6]} color="#78350f" />
@@ -42,12 +42,12 @@ export function Office() {
       <BoxColliders
         boxes={[
           // Workstations: desk + chair + worker
-          ...DESK_ZS.map((z) => ({ position: at(-16.05, z, 0.6), size: [1.7, 1.2, 1.5] as Vector3Tuple })),
+          ...DESK_ZS.map((z) => ({ position: at(-16.05, z, 0.6), size: [1.7, 1.2, 2.05] as Vector3Tuple })),
           { position: at(-5.2, 1, 0.5), size: [0.95, 1, 2.2] }, // waiting sofa
           { position: at(-6.6, 1, 0.25), size: [1, 0.5, 0.6] }, // coffee table
           { position: at(-10.7, RECEPTION.z, 0.9), size: [0.6, 1.8, 0.6] }, // receptionist
           { position: at(-4.7, -12, 0.9), size: [0.5, 1.8, 0.5] }, // coat rack
-          { position: at(PROFILE_DESK.x - 0.4, PROFILE_DESK.z, 0.6), size: [1.9, 1.2, 1.6] }, // profile desk + clerk
+          { position: at(PROFILE_DESK.x - 0.4, PROFILE_DESK.z, 0.6), size: [1.9, 1.2, 2.05] }, // profile desk + clerk
         ]}
       />
 
@@ -56,7 +56,7 @@ export function Office() {
         <StaticNpc variant="female-a" position={at(-10.7, RECEPTION.z)} facing={FACE_DOOR} animation="talk" />
 
         {/* Workstations along the west wall */}
-        <ModelInstances name="desk" items={DESK_ZS.map((z) => ({ position: at(DESK_X, z), rotationY: FACE_DOOR }))} />
+        <ModelInstances name="metal_office_desk" items={DESK_ZS.map((z) => ({ position: at(DESK_X, z), rotationY: FACE_DOOR }))} />
         <ModelInstances name="computerScreen" items={DESK_ZS.map((z) => ({ position: at(DESK_X - 0.2, z, DESK_TOP), rotationY: FACE_DOOR }))} />
         <ModelInstances name="computerKeyboard" items={DESK_ZS.map((z) => ({ position: at(DESK_X + 0.12, z, DESK_TOP), rotationY: FACE_DOOR }))} />
         <ModelInstances name="chairDesk" items={DESK_ZS.map((z) => ({ position: at(CHAIR_X, z), rotationY: FACE_WALL }))} />
@@ -75,8 +75,8 @@ export function Office() {
         })}
 
         {/* Waiting area */}
-        <Model name="loungeDesignSofa" position={at(-5.2, 1)} rotationY={FACE_WALL} />
-        <Model name="tableCoffee" position={at(-6.6, 1)} rotationY={Math.PI / 2} />
+        <Model name="sofa_02" position={at(-5.2, 1)} rotationY={FACE_WALL} />
+        <Model name="modern_coffee_table_01" position={at(-6.6, 1)} />
         <StaticNpc variant="male-d" position={seatPosition(-5.25, 0.42, 1.5)} facing={FACE_WALL} animation="sit" />
         <Model name="coatRackStanding" position={at(-4.7, -12)} />
         <Model name="bookcaseClosedWide" position={at(-13, BUILDING.minZ + 0.45)} />
@@ -85,7 +85,7 @@ export function Office() {
       {/* Profile desk */}
       <Sign text="PROFILE" position={[PROFILE_DESK.x, 3.1, PROFILE_DESK.z]} rotationY={FACE_DOOR} width={2.2} background="#7c3aed" />
       <Suspense fallback={null}>
-        <Model name="desk" position={at(PROFILE_DESK.x, PROFILE_DESK.z)} rotationY={FACE_DOOR} />
+        <Model name="metal_office_desk" position={at(PROFILE_DESK.x, PROFILE_DESK.z)} rotationY={FACE_WALL} />
         <Model name="computerScreen" position={at(PROFILE_DESK.x - 0.15, PROFILE_DESK.z - 0.3, DESK_TOP)} rotationY={FACE_DOOR} />
         <Model name="chairDesk" position={at(PROFILE_DESK.x - 0.95, PROFILE_DESK.z)} rotationY={FACE_DOOR} />
         <StaticNpc variant="female-b" position={seatPosition(PROFILE_DESK.x - 0.95, OFFICE_CHAIR_SEAT, PROFILE_DESK.z)} facing={FACE_DOOR} animation="study" />

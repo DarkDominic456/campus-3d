@@ -38,7 +38,8 @@ export function SunLight() {
     const moving = Math.abs(p.x - t.lastX) + Math.abs(p.z - t.lastZ) > 0.01
     t.lastX = p.x
     t.lastZ = p.z
-    if (++t.frame % (moving ? 2 : 4) === 0) l.shadow.needsUpdate = true
+    // Frame 1 too: until the map is first rendered, shaders would sample an unallocated shadow texture.
+    if (++t.frame % (moving ? 2 : 4) === 0 || t.frame === 1) l.shadow.needsUpdate = true
     // Snap to whole meters to reduce shadow shimmering while moving.
     const x = Math.round(p.x)
     const z = Math.round(p.z)

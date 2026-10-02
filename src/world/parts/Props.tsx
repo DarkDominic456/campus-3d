@@ -5,6 +5,7 @@ import { Sign } from './Sign'
 import { BoxColliders } from './BoxColliders'
 import { Model } from './Model'
 import { boxItem, scaled, useBatch, useBatchedItems } from './Batch'
+import { surfaceMaterial, type Surface } from './surfaces'
 
 /** Potted plant (GLB) with a box collider. */
 export function Plant({ position }: { position: Vector3Tuple }) {
@@ -45,23 +46,29 @@ export function Floor({
   position,
   size,
   color,
+  surface,
 }: {
   /** Center; y is the surface height. */
   position: Vector3Tuple
   /** Width (X) and depth (Z). */
   size: [number, number]
-  color: string
+  /** Flat color, or the tint of `surface`. */
+  color?: string
+  surface?: Surface
 }) {
+  const tint = color ?? (surface ? '#ffffff' : '#cbd5e1')
   const batch = useBatch()
   const anchor = useRef<Group>(null)
   // A 1 mm thick box instead of a plane so it can share the batched unit-box geometry.
-  useBatchedItems(anchor, `${color}|${size.join()}`, (world) => [boxItem(scaled(world, size[0], 0.001, size[1]), color, false)])
+  useBatchedItems(anchor, `${surface}|${tint}|${size.join()}`, (world) => [
+    boxItem(scaled(world, size[0], 0.001, size[1]), tint, false, surface),
+  ])
 
   if (batch) return <group ref={anchor} position={position} />
   return (
-    <mesh position={position} rotation-x={-Math.PI / 2} receiveShadow>
+    <mesh position={position} rotation-x={-Math.PI / 2} receiveShadow material={surface ? surfaceMaterial(surface, tint) : undefined}>
       <planeGeometry args={size} />
-      <meshStandardMaterial color={color} />
+      {!surface && <meshStandardMaterial color={tint} />}
     </mesh>
   )
 }

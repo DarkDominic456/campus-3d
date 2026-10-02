@@ -50,7 +50,7 @@ export function ConferenceRoom() {
 
   return (
     <group position={[0, FLOOR1_Y, 0]}>
-      <Floor position={[(HALL.maxX + BUILDING.maxX) / 2, 0.01, midZ]} size={[BUILDING.maxX - HALL.maxX, BUILDING.maxZ - BUILDING.minZ]} color="#b0bec5" />
+      <Floor position={[(HALL.maxX + BUILDING.maxX) / 2, 0.01, midZ]} size={[BUILDING.maxX - HALL.maxX, BUILDING.maxZ - BUILDING.minZ]} surface="carpetBeige" />
 
       {/* Presentation screen on the east wall: HTML slides via drei <Html transform> */}
       <PresentationScreen position={[SCREEN_X, SCREEN_Y, TABLE.z]} rotationY={-Math.PI / 2} />

@@ -4,6 +4,7 @@ import { Block } from '../parts/Block'
 import { StaticNpc } from '../../npc/StaticNpc'
 import { BoxColliders } from '../parts/BoxColliders'
 import { Floor, SignPost } from '../parts/Props'
+import { surfaceMaterial } from '../parts/surfaces'
 import { Interactable } from '../../interactables/Interactable'
 import { startSport } from '../../minigames/sports/SportController'
 import { useSportStore } from '../../minigames/sports/sportStore'
@@ -61,8 +62,8 @@ function BasketballCourt() {
   return (
     <group>
       <Athlete variant="male-b" position={[cx + 4, 0, hoopZ + 5]} facing={-2.4} animation="wave" />
-      <Floor position={[cx, 0.02, cz]} size={[w, d]} color="#c2410c" />
-      <Floor position={[cx, 0.025, cz]} size={[w - 0.6, d - 0.6]} color="#ea580c" />
+      <Floor position={[cx, 0.02, cz]} size={[w, d]} color="#8f8f8f" surface="asphalt" />
+      <Floor position={[cx, 0.025, cz]} size={[w - 0.6, d - 0.6]} color="#e08a5c" surface="asphalt" />
       {/* Key + free-throw line */}
       <Floor position={[cx, 0.03, hoopZ + 3.2]} size={[4.9, LINE_W]} color={LINE} />
       <Floor position={[cx - 2.45, 0.03, hoopZ + 1.6]} size={[LINE_W, 3.2]} color={LINE} />
@@ -96,10 +97,10 @@ function FootballPitch() {
   const penaltyActive = useSportStore((s) => s.active === 'football')
   return (
     <group>
-      <Floor position={[cx, 0.02, cz]} size={[w, d]} color="#4ade80" />
+      <Floor position={[cx, 0.02, cz]} size={[w, d]} color="#d8f0c8" surface="grass" />
       {/* Stripes */}
       {Array.from({ length: 6 }, (_, i) => (
-        <Floor key={i} position={[cx, 0.022, cz - d / 2 + d / 12 + (i * d) / 6]} size={[w, d / 12]} color="#22c55e" />
+        <Floor key={i} position={[cx, 0.022, cz - d / 2 + d / 12 + (i * d) / 6]} size={[w, d / 12]} color="#b4d8a0" surface="grass" />
       ))}
       {/* Outline + halfway + penalty box */}
       <Floor position={[cx, 0.03, cz - d / 2]} size={[w, LINE_W]} color={LINE} />
@@ -148,11 +149,10 @@ function CricketGround() {
   const creaseZ = cz + pitchLen / 2 - 1.2
   return (
     <group>
-      <mesh position={[cx, 0.02, cz]} rotation-x={-Math.PI / 2} receiveShadow>
+      <mesh position={[cx, 0.02, cz]} rotation-x={-Math.PI / 2} receiveShadow material={surfaceMaterial('grass', '#e2f5d4')}>
         <circleGeometry args={[r, 48]} />
-        <meshStandardMaterial color="#86efac" />
       </mesh>
-      <Floor position={[cx, 0.025, cz]} size={[3, pitchLen]} color="#d6c7a1" />
+      <Floor position={[cx, 0.025, cz]} size={[3, pitchLen]} color="#f0e2c4" surface="soil" />
       <Floor position={[cx, 0.03, creaseZ]} size={[3, LINE_W]} color={LINE} />
       <Floor position={[cx, 0.03, cz - pitchLen / 2 + 1.2]} size={[3, LINE_W]} color={LINE} />
       <Stumps x={cx} z={cz + pitchLen / 2} />

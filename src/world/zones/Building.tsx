@@ -6,8 +6,8 @@ import { BUILDING, DOOR_H, FLOOR1_Y, HALL, ROOF_Y, SLAB_BOTTOM, STAIRS, WALL_T }
 
 const { minX, maxX, minZ, maxZ } = BUILDING
 const H = WALL_T / 2
-const OUTER = '#e7dccb'
-const INNER = '#f5f1ea'
+const OUTER = '#ffffff' // tints of the brick / plaster textures
+const INNER = '#fbf8f3'
 const SLAB_T = FLOOR1_Y - SLAB_BOTTOM
 const FLOOR1_WALL_H = ROOF_Y - FLOOR1_Y
 
@@ -31,21 +31,25 @@ export function Building() {
   return (
     <group>
       {/* ---------- Outer walls (full height, both floors) ---------- */}
-      <Wall axis="x" at={maxZ} from={minX - H} to={maxX + H} height={ROOF_Y} openings={facadeOpenings} color={OUTER} />
-      <Wall axis="x" at={minZ} from={minX - H} to={maxX + H} height={ROOF_Y} openings={facadeOpenings} color={OUTER} />
-      <Wall axis="z" at={minX} from={minZ} to={maxZ} height={ROOF_Y} openings={sideOpenings} color={OUTER} />
-      <Wall axis="z" at={maxX} from={minZ} to={maxZ} height={ROOF_Y} openings={sideOpenings} color={OUTER} />
+      <Wall axis="x" at={maxZ} from={minX - H} to={maxX + H} height={ROOF_Y} openings={facadeOpenings} color={OUTER} surface="brick"
+        lining={{ side: -1, color: INNER, surface: 'plaster' }} />
+      <Wall axis="x" at={minZ} from={minX - H} to={maxX + H} height={ROOF_Y} openings={facadeOpenings} color={OUTER} surface="brick"
+        lining={{ side: 1, color: INNER, surface: 'plaster' }} />
+      <Wall axis="z" at={minX} from={minZ} to={maxZ} height={ROOF_Y} openings={sideOpenings} color={OUTER} surface="brick"
+        lining={{ side: 1, color: INNER, surface: 'plaster' }} />
+      <Wall axis="z" at={maxX} from={minZ} to={maxZ} height={ROOF_Y} openings={sideOpenings} color={OUTER} surface="brick"
+        lining={{ side: -1, color: INNER, surface: 'plaster' }} />
 
       {/* ---------- Ground floor room walls ---------- */}
-      <Wall axis="z" at={HALL.minX} from={minZ} to={maxZ} height={SLAB_BOTTOM} color={INNER}
+      <Wall axis="z" at={HALL.minX} from={minZ} to={maxZ} height={SLAB_BOTTOM} color={INNER} surface="plaster"
         openings={[{ center: 4, width: 2.4, height: 3 }]} />
-      <Wall axis="z" at={HALL.maxX} from={minZ} to={maxZ} height={SLAB_BOTTOM} color={INNER}
+      <Wall axis="z" at={HALL.maxX} from={minZ} to={maxZ} height={SLAB_BOTTOM} color={INNER} surface="plaster"
         openings={[{ center: 6, width: 2.4, height: 3 }]} />
 
       {/* ---------- First floor room walls ---------- */}
-      <Wall axis="z" at={HALL.minX} from={minZ} to={maxZ} y0={FLOOR1_Y} height={FLOOR1_WALL_H} color={INNER}
+      <Wall axis="z" at={HALL.minX} from={minZ} to={maxZ} y0={FLOOR1_Y} height={FLOOR1_WALL_H} color={INNER} surface="plaster"
         openings={[{ center: -8, width: 2.4, height: 3 }]} />
-      <Wall axis="z" at={HALL.maxX} from={minZ} to={maxZ} y0={FLOOR1_Y} height={FLOOR1_WALL_H} color={INNER}
+      <Wall axis="z" at={HALL.maxX} from={minZ} to={maxZ} y0={FLOOR1_Y} height={FLOOR1_WALL_H} color={INNER} surface="plaster"
         openings={[{ center: -9, width: 2.4, height: 3 }]} />
 
       {/* ---------- First floor slab, with a hole over the stairs ---------- */}
@@ -67,14 +71,15 @@ export function Building() {
             key={i}
             position={[midX, top / 2, STAIRS.zStart - (i + 0.5) * STAIRS.run]}
             size={[stairW, top, STAIRS.run]}
-            color={i % 2 ? '#a8a29e' : '#b8b2ad'}
+            color={i % 2 ? '#e7e5e4' : '#f5f5f4'}
+            surface="concrete"
           />
         )
       })}
 
       {/* ---------- Roof (no shadow, so sunlight still reaches the rooms) ---------- */}
       <Block position={[0, ROOF_Y + 0.15, (minZ + maxZ) / 2]} size={[maxX - minX + 0.6, 0.3, maxZ - minZ + 0.6]}
-        color="#9a6b50" castShadow={false} />
+        color="#a39386" surface="concrete" castShadow={false} />
       {/* First-floor ceiling (faces down) so rooms don't see the roof's underside */}
       <mesh position={[0, ROOF_Y - 0.01, (minZ + maxZ) / 2]} rotation-x={Math.PI / 2}>
         <planeGeometry args={[maxX - minX, maxZ - minZ]} />
@@ -82,7 +87,7 @@ export function Building() {
       </mesh>
 
       {/* ---------- Floors ---------- */}
-      <Floor position={[0, 0.02, (minZ + maxZ) / 2]} size={[HALL.maxX - HALL.minX, maxZ - minZ]} color="#d6d3d1" />
+      <Floor position={[0, 0.02, (minZ + maxZ) / 2]} size={[HALL.maxX - HALL.minX, maxZ - minZ]} surface="tiles" />
       <Floor position={[0, 0.02, maxZ + 1.5]} size={[6, 3]} color="#a8a29e" />
       <Floor position={[0, 0.02, minZ - 1.5]} size={[6, 3]} color="#a8a29e" />
 
@@ -114,7 +119,8 @@ function Slab({ x0, x1, z0, z1 }: { x0: number; x1: number; z0: number; z1: numb
     <Block
       position={[(x0 + x1) / 2, SLAB_BOTTOM + SLAB_T / 2, (z0 + z1) / 2]}
       size={[x1 - x0, SLAB_T, z1 - z0]}
-      color="#d6d3d1"
+      color="#f5f5f4"
+      surface="concrete"
       castShadow={false}
     />
   )

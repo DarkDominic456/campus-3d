@@ -13,17 +13,18 @@ import { useGLTF } from '@react-three/drei'
 import { BoxGeometry, InstancedMesh, Matrix4, Mesh, MeshStandardMaterial, Object3D } from 'three'
 import { propUrl, type PropName } from '../../assets/models'
 import { LayerGroup, useLayer, type Layer } from '../layers'
+import { surfaceMaterial, type Surface } from './surfaces'
 
 /**
  * Static-geometry batching. Every <Block> and <Model> inside a <BatchProvider> registers
  * its world matrix here instead of drawing itself; BatchRenderer draws one InstancedMesh
- * per (layer, color, shadow) for boxes and per (layer, sub-mesh) for GLB props.
+ * per (layer, surface, color, shadow) for boxes and per (layer, sub-mesh, 32 m cell) for GLB props.
  * ~200 draw calls → ~40. Only for things that never move. Items remember the visibility
  * layer (world/layers.tsx) of the zone they were declared in, so hidden zones hide their
  * instances too.
  */
 
-type BoxItem = { kind: 'box'; matrix: Matrix4; color: string; castShadow: boolean; layer?: Layer }
+type BoxItem = { kind: 'box'; matrix: Matrix4; color: string; surface?: Surface; castShadow: boolean; layer?: Layer }
 type PropItem = { kind: 'prop'; matrix: Matrix4; name: PropName; castShadow: boolean; layer?: Layer }
 type BatchItem = BoxItem | PropItem
 
@@ -101,6 +102,9 @@ export function useBatchedItems(
 
 // ---------------------------------------------------------------------------
 
+/** Side of the spatial chunks props are split into (m). */
+const CELL = 32
+
 const unitBox = new BoxGeometry(1, 1, 1)
 const materials = new Map<string, MeshStandardMaterial>()
 const materialFor = (color: string) => {
@@ -118,10 +122,13 @@ function BatchRenderer({ store }: { store: BatchStore }) {
       let g = byLayer.get(layer)
       if (!g) byLayer.set(layer, (g = { boxes: new Map(), props: new Map() }))
       if (item.kind === 'box') {
-        const key = `${item.color}|${item.castShadow}`
+        const key = `${item.surface ?? ''}|${item.color}|${item.castShadow}`
         g.boxes.set(key, [...(g.boxes.get(key) ?? []), item])
       } else {
-        const key = `${item.name}|${item.castShadow}`
+        // Props are split into CELL-sized spatial chunks: an InstancedMesh is frustum-culled as
+        // a whole, so one mesh spanning the campus (e.g. all trees) would never be culled.
+        const cell = `${Math.floor(item.matrix.elements[12] / CELL)},${Math.floor(item.matrix.elements[14] / CELL)}`
+        const key = `${item.name}|${item.castShadow}|${cell}`
         g.props.set(key, [...(g.props.get(key) ?? []), item])
       }
     }
@@ -136,7 +143,7 @@ function BatchRenderer({ store }: { store: BatchStore }) {
             <InstancedGeometry
               key={key}
               geometry={unitBox}
-              material={materialFor(items[0].color)}
+              material={items[0].surface ? surfaceMaterial(items[0].surface, items[0].color) : materialFor(items[0].color)}
               matrices={items.map((i) => i.matrix)}
               castShadow={items[0].castShadow}
             />
@@ -213,5 +220,11 @@ const tmpScale = new Matrix4()
 export const scaled = (world: Matrix4, sx: number, sy: number, sz: number) =>
   world.clone().multiply(tmpScale.makeScale(sx, sy, sz))
 
-export const boxItem = (matrix: Matrix4, color: string, castShadow: boolean): BatchItem => ({ kind: 'box', matrix, color, castShadow })
+export const boxItem = (matrix: Matrix4, color: string, castShadow: boolean, surface?: Surface): BatchItem => ({
+  kind: 'box',
+  matrix,
+  color,
+  surface,
+  castShadow,
+})
 export const propItem = (matrix: Matrix4, name: PropName, castShadow: boolean): BatchItem => ({ kind: 'prop', matrix, name, castShadow })

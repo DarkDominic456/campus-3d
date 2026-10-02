@@ -20,10 +20,13 @@ zone or a new dependency, are easier to agree on before the code exists.
 
 ## Ground rules
 
-- **Assets must be CC0 or your own work**, as GLB. Put the source in `assets-src/<pack>/` with
-  its license, run `npm run assets`, and never commit unlicensed models or textures.
+- **Assets must be CC0 or your own work** (code-generated assets from permissively licensed
+  tools, like EZ-Tree, are fine), as GLB. Small packs go in `assets-src/<pack>/` with their
+  license; large downloadable sources go in `scripts/fetch-sources.mjs` (git-ignored, with a
+  SOURCE.txt). Run `npm run assets`, and never commit unlicensed models or textures.
 - **Colliders are boxes or capsules**, never mesh colliders (performance).
-- **Keep it fast**: target 60 fps on a mid-range laptop. Instance repeated props
+- **Keep it fast**: target 60 fps on a mid-range laptop. Compare `?bench=1` before and after
+  visual or performance changes (plugged in, on a production build) and put the table in the PR. Instance repeated props
   (`ModelInstances`), don't allocate inside `useFrame`, don't write to zustand every frame.
 - **The 2D site must stay light**: nothing imported by `src/site2d/` may import three.js,
   drei or R3F. Lazy-load anything 3D.

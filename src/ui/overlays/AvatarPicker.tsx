@@ -18,35 +18,39 @@ export function AvatarPicker({
   onChange: (v: CharacterVariant) => void
   preview?: boolean
 }) {
+  // Preview + current name on top, the name buttons in a full-width grid below (the profile
+  // panel is narrow, so a side-by-side layout squeezes the labels).
   return (
-    <div className="flex gap-4">
-      {preview && (
-        <div className="h-40 w-32 shrink-0 overflow-hidden rounded-xl bg-gradient-to-b from-sky-100 to-sky-200" aria-hidden>
-          <Suspense fallback={null}>
-            <AvatarPreview variant={value} />
-          </Suspense>
+    <div>
+      <div className="flex items-center gap-4">
+        {preview && (
+          <div className="h-40 w-32 shrink-0 overflow-hidden rounded-xl bg-gradient-to-b from-sky-100 to-sky-200" aria-hidden>
+            <Suspense fallback={null}>
+              <AvatarPreview variant={value} />
+            </Suspense>
+          </div>
+        )}
+        <div>
+          <p className="text-sm font-medium text-slate-700">Choose your avatar</p>
+          <p className="mt-1 text-xs text-slate-500">{label(value)}</p>
         </div>
-      )}
-      <div>
-        <p className="mb-2 text-sm font-medium text-slate-700">Choose your avatar</p>
-        <div role="radiogroup" aria-label="Avatar" className="grid grid-cols-3 gap-1.5">
-          {CHARACTERS.map((v) => (
-            <button
-              key={v}
-              type="button"
-              role="radio"
-              aria-checked={v === value}
-              aria-label={label(v)}
-              onClick={() => onChange(v)}
-              className={`rounded-md border px-2 py-1 text-xs font-medium transition ${
-                v === value ? 'border-sky-500 bg-sky-50 text-sky-800' : 'border-slate-200 text-slate-600 hover:border-slate-400'
-              }`}
-            >
-              {AVATAR_LABELS[v]}
-            </button>
-          ))}
-        </div>
-        <p className="mt-2 text-xs text-slate-500">{label(value)}</p>
+      </div>
+      <div role="radiogroup" aria-label="Avatar" className="mt-3 grid grid-cols-3 gap-1.5">
+        {CHARACTERS.map((v) => (
+          <button
+            key={v}
+            type="button"
+            role="radio"
+            aria-checked={v === value}
+            aria-label={label(v)}
+            onClick={() => onChange(v)}
+            className={`truncate rounded-md border px-1.5 py-1 text-xs font-medium transition ${
+              v === value ? 'border-sky-500 bg-sky-50 text-sky-800' : 'border-slate-200 text-slate-600 hover:border-slate-400'
+            }`}
+          >
+            {AVATAR_LABELS[v]}
+          </button>
+        ))}
       </div>
     </div>
   )

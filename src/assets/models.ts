@@ -29,10 +29,10 @@ export const AVATAR_LABELS: Record<(typeof CHARACTERS)[number], string> = {
   'male-e': 'Beach',
   'male-f': 'Punk',
   'female-a': 'Dress',
-  'female-b': 'Casual',
+  'female-b': 'Jeans',
   'female-c': 'Explorer',
   'female-d': 'Hooded',
-  'female-e': 'Punk',
+  'female-e': 'Rocker',
 }
 
 export type FurnitureName = (typeof FURNITURE)[number]

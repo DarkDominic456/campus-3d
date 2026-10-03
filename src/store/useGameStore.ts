@@ -28,6 +28,8 @@ export interface OverlayPropsMap {
   people: Record<string, never>
   /** Another visitor's public profile card. */
   peerCard: { id: string }
+  /** Conference-room session schedule (live now / upcoming). */
+  sessions: Record<string, never>
 }
 export type OverlayId = keyof OverlayPropsMap
 

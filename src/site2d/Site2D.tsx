@@ -10,13 +10,15 @@ import { ProfileContent } from '../ui/overlays/ProfileOverlay'
 import { displayName } from '../services/auth'
 import { SlideDeck } from '../ui/slides/SlideDeck'
 import { GAMES, gameMeta, type GameId } from '../minigames/registry'
+import { SessionsContent } from '../ui/sessions/SessionsContent'
 
-const ROUTES = ['home', 'learn', 'games', 'about', 'pricing', 'contact', 'account', 'profile'] as const
+const ROUTES = ['home', 'learn', 'games', 'sessions', 'about', 'pricing', 'contact', 'account', 'profile'] as const
 type Route = (typeof ROUTES)[number]
 
 const NAV: { route: Route; label: string }[] = [
   { route: 'learn', label: 'Learn' },
   { route: 'games', label: 'Games' },
+  { route: 'sessions', label: 'Sessions' },
   { route: 'about', label: 'About' },
   { route: 'pricing', label: 'Pricing' },
   { route: 'contact', label: 'Request a demo' },
@@ -58,6 +60,13 @@ export function Site2D() {
           </Page>
         )}
         {route === 'games' && <Games />}
+        {route === 'sessions' && (
+          <Page title="Sessions" intro="Talks, workshops and meetups from the campus conference room — join from anywhere.">
+            <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+              <SessionsContent inlineVideo />
+            </div>
+          </Page>
+        )}
         {route === 'about' && <About />}
         {route === 'pricing' && (
           <Page title="Pricing" intro="Simple plans for learners, and custom campuses for teams and schools.">
@@ -75,7 +84,7 @@ export function Site2D() {
         {route === 'profile' && <ProfilePage />}
       </main>
       <footer className="border-t border-slate-200 py-8 text-center text-xs text-slate-500">
-        Campus 3D · 3D art by Kenney (CC0) ·{' '}
+        Campus 3D · Art: Quaternius, Poly Haven, Kenney (CC0) ·{' '}
         <a href="#/about" className="underline underline-offset-2">About us</a>
       </footer>
     </div>
@@ -134,7 +143,7 @@ function Page({ title, intro, children }: { title: string; intro?: string; child
 const AREAS: { title: string; body: string; route: Route | null; color: string }[] = [
   { title: 'Classrooms', body: `${COURSES.length} courses, from web basics to algorithms.`, route: 'learn', color: '#f59e0b' },
   { title: 'Gaming room', body: 'Snake, Sliding Puzzle and Paint-by-Numbers with high scores.', route: 'games', color: '#8b5cf6' },
-  { title: 'Conference room', body: 'Who we are and the team behind the campus.', route: 'about', color: '#ec4899' },
+  { title: 'Conference room', body: 'Live sessions and workshops, plus who we are.', route: 'sessions', color: '#ec4899' },
   { title: 'Office', body: 'Plans and pricing, or request a personal demo.', route: 'pricing', color: '#0ea5e9' },
   { title: 'Sports ground', body: 'Basketball, penalties and cricket — 3D only.', route: null, color: '#16a34a' },
 ]

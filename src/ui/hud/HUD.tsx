@@ -3,6 +3,7 @@ import { useGameStore } from '../../store/useGameStore'
 import { zoneLabel } from '../../world/zoneConfig'
 import { ControlsHint } from './ControlsHint'
 import { TourPanel } from './TourPanel'
+import { LiveBanner } from './LiveBanner'
 import { ChatBox } from './ChatBox'
 import { PRESENCE_MODE, usePresence } from '../../multiplayer/presence'
 import { Minimap } from './Minimap'
@@ -28,6 +29,7 @@ export function HUD() {
       <div className="absolute top-3 left-3 flex flex-col items-start gap-2">
         <LocationBadge />
         <TourPanel touch={touch} />
+        <LiveBanner />
       </div>
       {/* On touch the bottom corners belong to the joystick and buttons: the welcome card goes top-center. */}
       {touch && (

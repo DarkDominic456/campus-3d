@@ -229,6 +229,19 @@ Vite 8, React 19, TypeScript 7, three 0.186, @react-three/fiber 9, @react-three/
     `ChatBox` (Enter opens, `chatOpen` joins `isInputLocked()` so typing doesn't move; Esc
     cancels; keys 1–4 = emotes); minimap amber dots; Settings → "Other visitors".
     Wave emote plays the wave animation (`playerRuntime.emoteUntil`).
+- **Live sessions** (Phase 10): the schedule is data in `content/sessions.ts` (placeholders —
+  the user writes real ones; only videos they own). Weekly slots are in IST
+  (`SESSION_UTC_OFFSET_MIN`), one-offs are ISO times. `sessions/schedule.ts` (pure, shared with
+  2D): `schedule(now)` → occurrences (live first; a weekly slot that is still running after
+  midnight counts), `liveSession`, `useNow`, `videoEmbed` (YouTube → youtube-nocookie, Vimeo,
+  https .mp4/.webm — anything else is never embedded), `safeLink` (https only), `.ics` export
+  (weekly → RRULE). Dev: `?liveDemo=1` adds a session that started 10 min ago,
+  `&liveVideo=<url>` tests embeds. UI: `ui/sessions/SessionsContent` (3D `sessions` overlay +
+  2D `#/sessions`); the conference screen shows the live video / a join card (else slides with
+  a "Next session" pill); a SESSIONS board by the conference door (red while live);
+  `ui/hud/LiveBanner` with Watch → `watchFromAnywhere()` (teleport + screen focus).
+  Note: escapes like backslash-n / backslash-u written through tooling can turn into real
+  characters — the code builds CRLF / backslashes with `String.fromCharCode`.
 - **Mount order matters**: in `World.tsx`, `<Player />` is before `<ThirdPersonCamera />`
   so the camera follows the same frame's position.
 - **Player visuals are separate from physics**: `PlayerModel.tsx` (origin at feet,
@@ -300,6 +313,7 @@ src/
   settings/              settings.ts (sound, time of day; localStorage)
   tour/                  tour.ts (steps + store), TourTracker, TourGuide (beacon + arrow)
   multiplayer/           presence.ts (store + transports), PresenceSync, RemotePlayers
+  sessions/              schedule.ts (occurrences, embeds, .ics) — content in content/sessions.ts
 server/                  presence-server.mjs (WebSocket relay, own package.json + README)
   minigames/sports/      sportStore (+ sportRuntime), config (spots, cameras, hoop/goal/pitch),
                          SportController (lifecycle, startSport, useSportAction),
@@ -360,6 +374,10 @@ face +Z at rotationY 0.
 title, hint, beacon `target`, "take me there" `spot`), then call
 `useTourStore.getState().complete(id)` where it happens (or watch a store in `TourTracker`).
 
+**Add or edit a session** — edit `SESSIONS` in `src/content/sessions.ts` (weekly `{ day, time }`
+in IST or a one-off `start`; optional `joinUrl` and `videoUrl`). Try the live state locally
+with `?liveDemo=1&liveVideo=<url>`.
+
 **Add an NPC** — `<StaticNpc variant position facing animation />` (seated: position from
 `seatPosition(x, seatHeight, z)`), or add a route to `ROUTES` in `npc/WalkingNpcs.tsx`.
 Wrap in `<Suspense fallback={null}>` so loading never blocks colliders.
@@ -398,7 +416,8 @@ Wrap in `<Suspense fallback={null}>` so loading never blocks colliders.
       UI, synthesised ambience), day / sunset / night, Settings panel.
 - [x] **Phase 9** — multiplayer presence: other visitors, name tags, emotes, chat, profile cards
       (WebSocket relay in `server/`; the live site needs it hosted + `VITE_MULTIPLAYER_URL`).
-- [ ] **Phase 10** — conference-room live sessions (schedule, live now, video on the screen, join).
+- [x] **Phase 10** — conference-room live sessions (schedule, live now, video on the screen, join,
+      add to calendar, live banner, 2D `#/sessions`).
 - [ ] **Phase 11** — Hindi / English, accessibility pass, installable PWA.
 - [ ] **Phase 12** — real URLs + Open Graph previews for 2D pages, opt-in privacy-friendly analytics.
 - [ ] **Phase 13** — Playwright e2e in CI, zone plugin structure.

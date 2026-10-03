@@ -27,7 +27,7 @@ backend. See [CONTRIBUTING.md](CONTRIBUTING.md) and the [roadmap](#roadmap).
 | **Classrooms** | Sit at the free desk; the laptop opens the **Learning** page (courses, lessons, progress). |
 | **Gaming room** | Arcade cabinets and a console: **Snake**, **Sliding Puzzle**, **Paint-by-Numbers**, with per-user high scores and a leaderboard. |
 | **Office (1st floor)** | Reception: **Request a demo** form and **pricing**. **PROFILE desk**: photo, name, contact number, tagline, location, about, career summary, 3D avatar, change email / password. |
-| **Conference room** | Slides rendered on the wall screen (← → to change slide). |
+| **Conference room** | **Live sessions**: talks and workshops play on the big screen while they're on, with a "Join the call" link, a schedule board, "Add to calendar", and a "Live now" banner anywhere on campus. Between sessions the screen shows the slides (← → to change). |
 | **With others** | See other visitors walk around with name tags, chat (Enter), send emotes (1–4), and press E next to someone to view their profile card. |
 | **Anywhere** | A **guided tour** for first-time visitors (six steps, a glowing beacon and an arrow at your feet), and **Settings** for sound and **day / sunset / night**. |
 | **Outdoor ground** | **Basketball** (aim + power meters, real ball physics), **football penalties** against a diving keeper, **cricket batting** with timing (SIX / FOUR / edge). Rounds are 30–60 s. |
@@ -212,8 +212,8 @@ Ideas that would make the campus more useful. Issues and PRs welcome.
 3. ~~**Multiplayer presence**~~: done (Phase 9). It needs the server hosted for the live site.
 4. **Profiles in the world**: the visitor card is done (Phase 9). Still open: a 3D leaderboard
    in the gaming room and public profile pages (these need the backend).
-5. **Live sessions**: the conference room as a real meeting space (scheduled talks, screen
-   sharing, a video embed on the wall screen).
+5. ~~**Live sessions**~~: done (Phase 10). Edit the schedule in `src/content/sessions.ts`.
+   Still open: in-campus screen sharing.
 6. ~~**Guided first visit**, audio and day / night~~: done (Phase 8).
 7. **Accessibility and reach**: keyboard-only and screen-reader friendly overlays, Hindi /
    English (i18n), installable PWA, better low-end mobile performance.

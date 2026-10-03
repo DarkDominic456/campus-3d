@@ -8,6 +8,8 @@ import { useGameStore } from '../../store/useGameStore'
 import { PresentationScreen, PRESENTATION_FOCUS_ID } from './PresentationScreen'
 import { StaticNpc, seatPosition } from '../../npc/StaticNpc'
 import { npcLook } from '../../npc/variants'
+import { Sign } from '../parts/Sign'
+import { liveSession, useNow } from '../../sessions/schedule'
 import { BUILDING, FLOOR1_Y, HALL } from '../layout'
 
 const TABLE = { x: 10.5, z: -2, length: 7, width: 2.2 }
@@ -21,7 +23,7 @@ const SCREEN_X = BUILDING.maxX - 0.2
 const SCREEN_Y = 2.2
 
 /** Camera framing the whole screen (world space — the room is on the first floor). */
-function watchPresentation() {
+export function watchPresentation() {
   useGameStore.getState().enterFocus({
     id: PRESENTATION_FOCUS_ID,
     camera: {
@@ -31,6 +33,43 @@ function watchPresentation() {
     hidePlayer: true,
     hint: '← → change slide ·',
   })
+}
+
+/** "Watch on the big screen" from anywhere (Sessions panel, live banner): walk in + look at the screen. */
+export function watchFromAnywhere() {
+  const s = useGameStore.getState()
+  s.closeOverlay()
+  s.requestTeleport([SCREEN_X - 3.4, FLOOR1_Y + 0.9, TABLE.z], Math.PI / 2)
+  watchPresentation()
+}
+
+/** Schedule board just inside the door (x = 4, z = −9); turns red while a session is live. */
+const BOARD = { x: HALL.maxX + 0.16, z: -12 }
+
+function SessionsBoard() {
+  const now = useNow(30_000)
+  const live = liveSession(now)
+  return (
+    <>
+      <Sign
+        text={live ? '● LIVE NOW\nSessions' : 'SESSIONS\nschedule'}
+        position={[BOARD.x, 2, BOARD.z]}
+        rotationY={Math.PI / 2}
+        width={1.6}
+        height={0.9}
+        fontSize={0.2}
+        background={live ? '#dc2626' : '#be185d'}
+      />
+      <Interactable
+        id="conference-sessions"
+        prompt={live ? `Press E — live now: ${live.session.title}` : 'Press E to see the session schedule'}
+        position={[BOARD.x + 1, 0, BOARD.z]}
+        triggerSize={[0.9, 1.2, 1]}
+        promptOffset={[0, 2.5, 0]}
+        onInteract={() => useGameStore.getState().openOverlay('sessions')}
+      />
+    </>
+  )
 }
 
 const chairZ = (side: number) => TABLE.z + side * (TABLE.width / 2 + CHAIR_GAP)
@@ -86,6 +125,8 @@ export function ConferenceRoom() {
       <Plant position={[4.8, 0, 9.2]} />
       <Plant position={[17.2, 0, 9.2]} />
       <Plant position={[17.2, 0, -13.2]} />
+
+      <SessionsBoard />
 
       <Interactable
         id="conference-screen"

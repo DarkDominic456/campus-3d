@@ -22,12 +22,15 @@ import { useSettings } from './settings/settings'
 import { useTourStore } from './tour/tour'
 import { TourGuide } from './tour/TourGuide'
 import { TourTracker } from './tour/TourTracker'
+import { PresenceSync } from './multiplayer/PresenceSync'
+import { RemotePlayers } from './multiplayer/RemotePlayers'
+import { usePresence } from './multiplayer/presence'
 import { Bench, BenchTable, benchEnabled } from './world/Bench'
 
 // Dev-only handle for debugging / automated browser checks (renderer is added in onCreated).
 if (import.meta.env.DEV) {
   Object.assign(window, {
-    __game: { store: useGameStore, playerRuntime, teleportTo, sport: { store: useSportStore, runtime: sportRuntime }, audioStatus, settings: useSettings, tour: useTourStore },
+    __game: { store: useGameStore, playerRuntime, teleportTo, sport: { store: useSportStore, runtime: sportRuntime }, audioStatus, settings: useSettings, tour: useTourStore, presence: usePresence },
   })
 }
 
@@ -73,6 +76,9 @@ export default function App3D() {
         </Suspense>
         <AudioSystem />
         <TourGuide />
+        <Suspense fallback={null}>
+          <RemotePlayers />
+        </Suspense>
         {benchEnabled() && <Bench />}
       </Canvas>
       <InteractionManager />
@@ -80,6 +86,7 @@ export default function App3D() {
       <SportController />
       <TeleportBridge />
       <TourTracker />
+      <PresenceSync />
       <UiSounds />
       <UILayer />
       <LoadingScreen />

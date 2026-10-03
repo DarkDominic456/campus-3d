@@ -3,6 +3,7 @@ import { playerRuntime, teleportTo } from '../../player/playerRuntime'
 import { useGameStore } from '../../store/useGameStore'
 import { ZONES, type ZoneDef } from '../../world/zoneConfig'
 import { BUILDING, GATE_Z, WORLD } from '../../world/layout'
+import { peerStates, usePresence } from '../../multiplayer/presence'
 
 const PAD = 2
 const VIEW = {
@@ -33,6 +34,8 @@ export function Minimap() {
   const floor = useGameStore((s) => s.currentFloor)
   const overlayOpen = useGameStore((s) => s.activeOverlay !== null)
   const marker = useRef<SVGGElement>(null)
+  const peerDots = useRef<SVGGElement>(null)
+  const peerIds = usePresence((s) => Object.keys(s.peers).join(','))
 
   useEffect(() => {
     let raf = 0
@@ -42,6 +45,12 @@ export function Minimap() {
       // Marker points "up" (−Z) at 0°; SVG rotation is clockwise.
       const deg = (Math.atan2(Math.sin(f), -Math.cos(f)) * 180) / Math.PI
       marker.current?.setAttribute('transform', `translate(${x.toFixed(2)} ${z.toFixed(2)}) rotate(${deg.toFixed(1)})`)
+      // Other visitors: one dot each, moved like the player marker.
+      for (const dot of peerDots.current?.children ?? []) {
+        const st = peerStates.get(dot.getAttribute('data-id') ?? '')
+        dot.setAttribute('visibility', st ? 'visible' : 'hidden')
+        if (st) dot.setAttribute('transform', `translate(${st.p[0].toFixed(1)} ${st.p[2].toFixed(1)})`)
+      }
       raf = requestAnimationFrame(tick)
     }
     raf = requestAnimationFrame(tick)
@@ -113,6 +122,10 @@ export function Minimap() {
         <text x={0} y={GATE_Z + 6} fontSize={4.2} fill="#e2e8f0" textAnchor="middle" style={{ fontWeight: 600 }}>
           Gate
         </text>
+        <g ref={peerDots} style={{ pointerEvents: 'none' }}>
+          {peerIds &&
+            peerIds.split(',').map((id) => <circle key={id} data-id={id} r={2.2} fill="#fbbf24" stroke="#78350f" strokeWidth={0.5} visibility="hidden" />)}
+        </g>
         <g ref={marker} style={{ pointerEvents: 'none' }}>
           <circle r={4.5} fill="#38bdf8" opacity={0.25} />
           <polygon points="0,-3.4 2.4,2.6 0,1.3 -2.4,2.6" fill="#f8fafc" stroke="#0369a1" strokeWidth={0.6} />

@@ -24,6 +24,10 @@ export interface OverlayPropsMap {
   profile: Record<string, never>
   /** HUD → Settings: sound, time of day, tour. */
   settings: Record<string, never>
+  /** Who's online (multiplayer) + privacy toggles. */
+  people: Record<string, never>
+  /** Another visitor's public profile card. */
+  peerCard: { id: string }
 }
 export type OverlayId = keyof OverlayPropsMap
 
@@ -33,7 +37,7 @@ export interface ActiveOverlay {
 }
 
 /** Drives PlayerModel animations (a subset of CharacterAnim in characters/clips.ts). */
-export type PlayerAnimation = 'idle' | 'walk' | 'run' | 'jump' | 'fall' | 'sit' | 'study' | 'talk'
+export type PlayerAnimation = 'idle' | 'walk' | 'run' | 'jump' | 'fall' | 'sit' | 'study' | 'talk' | 'wave'
 
 /** An interactable whose trigger zone the player is currently inside. */
 export interface NearbyInteractable {
@@ -102,6 +106,10 @@ interface GameState {
   currentFloor: 0 | 1
   setLocation: (zone: string, floor: 0 | 1) => void
 
+  /** The chat input is open (typing must not move the player). */
+  chatOpen: boolean
+  setChatOpen: (open: boolean) => void
+
   showControlsHint: boolean
   setShowControlsHint: (show: boolean) => void
 
@@ -160,6 +168,9 @@ export const useGameStore = create<GameState>()((set, get) => ({
   currentFloor: 0,
   setLocation: (currentZone, currentFloor) => set({ currentZone, currentFloor }),
 
+  chatOpen: false,
+  setChatOpen: (chatOpen) => set({ chatOpen }),
+
   showControlsHint: !readHintSeen(),
   setShowControlsHint: (showControlsHint) => {
     if (!showControlsHint) {
@@ -184,7 +195,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
 /** True while player input (movement, jump, interact, camera drag) must be ignored. */
 export const isInputLocked = () => {
   const s = useGameStore.getState()
-  return s.activeOverlay !== null || s.focus !== null
+  return s.activeOverlay !== null || s.focus !== null || s.chatOpen
 }
 
 /** The interactable E would trigger right now, if any. */

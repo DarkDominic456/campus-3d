@@ -15,6 +15,12 @@ interface Settings {
   /** Birds / wind / crickets bed. */
   ambience: boolean
   timeOfDay: TimeOfDaySetting
+  /** Multiplayer: be visible to (and see) other visitors. */
+  showPresence: boolean
+  /** Share photo, location and about with other visitors (opt-in). Name, avatar and tagline are always shown while visible. */
+  shareCard: boolean
+  /** Show chat messages and bubbles. */
+  showChat: boolean
 }
 
 interface SettingsState extends Settings {
@@ -22,7 +28,7 @@ interface SettingsState extends Settings {
 }
 
 const KEY = 'campus3d.settings'
-const DEFAULTS: Settings = { muted: false, volume: 0.7, ambience: true, timeOfDay: 'day' }
+const DEFAULTS: Settings = { muted: false, volume: 0.7, ambience: true, timeOfDay: 'day', showPresence: true, shareCard: false, showChat: true }
 
 function load(): Settings {
   try {
@@ -36,9 +42,9 @@ export const useSettings = create<SettingsState>()((set, get) => ({
   ...load(),
   set: (patch) => {
     set(patch)
-    const { muted, volume, ambience, timeOfDay } = get()
+    const { muted, volume, ambience, timeOfDay, showPresence, shareCard, showChat } = get()
     try {
-      localStorage.setItem(KEY, JSON.stringify({ muted, volume, ambience, timeOfDay }))
+      localStorage.setItem(KEY, JSON.stringify({ muted, volume, ambience, timeOfDay, showPresence, shareCard, showChat }))
     } catch {
       // Private mode / storage full: settings just won't persist.
     }

@@ -194,7 +194,7 @@ export function Player() {
     if (!grounded.current) anim = vel.y > 0 ? 'jump' : 'fall'
     else if (horizontalSpeed > (WALK_SPEED + RUN_SPEED) / 2) anim = 'run'
     else if (horizontalSpeed > 0.3) anim = 'walk'
-    else anim = 'idle'
+    else anim = performance.now() < playerRuntime.emoteUntil ? 'wave' : 'idle'
     setAnimation(anim)
   })
 

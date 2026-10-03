@@ -4,6 +4,8 @@ import { useSettings, type TimeOfDaySetting } from '../../settings/settings'
 import { useGameStore } from '../../store/useGameStore'
 import { useTourStore } from '../../tour/tour'
 import { playSound } from '../../audio/audio'
+import { PRESENCE_MODE } from '../../multiplayer/presence'
+import { PrivacyToggles } from './PrivacyToggles'
 
 const TIMES: { value: TimeOfDaySetting; label: string }[] = [
   { value: 'day', label: 'Day' },
@@ -74,6 +76,12 @@ export function SettingsOverlay() {
           </div>
           <p className="mt-2 text-xs text-slate-500">"My clock" follows your local time: day 6–17 h, sunset until 19:30, then night.</p>
         </Section>
+
+        {PRESENCE_MODE && (
+          <Section title="Other visitors">
+            <PrivacyToggles />
+          </Section>
+        )}
 
         <Section title="Campus tour">
           <p className="text-sm text-slate-600">A short guided walk: sign up, sit in class, play a game and a sport, set up your profile, watch the presentation.</p>

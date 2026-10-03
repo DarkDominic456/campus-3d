@@ -28,6 +28,7 @@ backend. See [CONTRIBUTING.md](CONTRIBUTING.md) and the [roadmap](#roadmap).
 | **Gaming room** | Arcade cabinets and a console: **Snake**, **Sliding Puzzle**, **Paint-by-Numbers**, with per-user high scores and a leaderboard. |
 | **Office (1st floor)** | Reception: **Request a demo** form and **pricing**. **PROFILE desk**: photo, name, contact number, tagline, location, about, career summary, 3D avatar, change email / password. |
 | **Conference room** | Slides rendered on the wall screen (← → to change slide). |
+| **With others** | See other visitors walk around with name tags, chat (Enter), send emotes (1–4), and press E next to someone to view their profile card. |
 | **Anywhere** | A **guided tour** for first-time visitors (six steps, a glowing beacon and an arrow at your feet), and **Settings** for sound and **day / sunset / night**. |
 | **Outdoor ground** | **Basketball** (aim + power meters, real ball physics), **football penalties** against a diving keeper, **cricket batting** with timing (SIX / FOUR / edge). Rounds are 30–60 s. |
 
@@ -56,6 +57,12 @@ walk around and stop to look at you.
   - Sky, sun / moon and fog fade between times of day.
   - Street lamps light the paths at night, and the room lights come on indoors.
   - "My clock" follows your local time.
+- **Multiplayer presence** (optional server):
+  - Other visitors with name tags, chat, emotes and opt-in profile cards.
+  - Shown in the "N online" panel and as dots on the minimap.
+  - Privacy switches: hide yourself, share your card or not, hide chat. Phone and email are
+    never shared.
+  - Runs on a tiny WebSocket relay in [`server/`](server/README.md).
 - **HUD**:
   - Current location and a minimap (click to teleport).
   - Teleport menu (T) and controls help (H).
@@ -92,6 +99,22 @@ npm run dev          # http://localhost:5173
 | `/?mode=3d` · `/?mode=2d` | force the 3D campus or the 2D site |
 | `/?touch=1` | mobile touch controls on desktop |
 | `/?bench=1` | benchmark: visits fixed spots and shows fps, draw calls and triangles |
+
+### Multiplayer
+
+There are three ways to run it:
+
+- **Without a server, in dev:** open the campus in two tabs of the same browser. "Local
+  mode" connects them.
+- **With a real server, locally:**
+  1. Run `npm run server`.
+  2. Put `VITE_MULTIPLAYER_URL=ws://localhost:8787` in `.env.local`.
+  3. Restart `npm run dev`.
+- **On the live site:** host `server/` on any Node host that keeps WebSockets open, such as
+  Render, Fly or Railway. Then set `VITE_MULTIPLAYER_URL=wss://…` in Vercel. Steps are in
+  [server/README.md](server/README.md).
+
+Without a URL, production builds hide multiplayer.
 
 ### Controls
 
@@ -186,10 +209,9 @@ Ideas that would make the campus more useful. Issues and PRs welcome.
    email.
 2. **Real learning content**: video or text lessons, quizzes, progress synced to the account,
    and completion certificates; content editable from JSON or a headless CMS.
-3. **Multiplayer presence**: see other visitors walking around, with name tags from their
-   profile and simple chat or emotes.
-4. **Profiles in the world**: a visitor's card when you walk up to them, a 3D leaderboard in
-   the gaming room, and a public profile page (`#/u/<name>`).
+3. ~~**Multiplayer presence**~~: done (Phase 9). It needs the server hosted for the live site.
+4. **Profiles in the world**: the visitor card is done (Phase 9). Still open: a 3D leaderboard
+   in the gaming room and public profile pages (these need the backend).
 5. **Live sessions**: the conference room as a real meeting space (scheduled talks, screen
    sharing, a video embed on the wall screen).
 6. ~~**Guided first visit**, audio and day / night~~: done (Phase 8).

@@ -16,6 +16,8 @@ or mini games. Built in phases — **stop after each phase and wait for the user
 - `npm run build` — typecheck (`tsc -b`) + production build
 - `npm run typecheck` — typecheck only
 - `npm run preview` — serve the production build
+- `npm run server` — multiplayer presence server on ws://localhost:8787 (set
+  `VITE_MULTIPLAYER_URL=ws://localhost:8787` in `.env.local` to use it; see `server/README.md`)
 
 ## Stack (keep to this unless blocked)
 Vite 8, React 19, TypeScript 7, three 0.186, @react-three/fiber 9, @react-three/drei 10,
@@ -208,6 +210,25 @@ Vite 8, React 19, TypeScript 7, three 0.186, @react-three/fiber 9, @react-three/
   chevron at the player's feet pointing to `guideWaypoint()` (door / stairs / target).
   `ui/hud/TourPanel.tsx` under the location badge (collapsible; collapsed on touch). Offered
   from the welcome card (ControlsHint) and Settings.
+- **Multiplayer presence** (Phase 9, `multiplayer/`):
+  - `presence.ts` (no three): zustand `usePresence` (status, selfId, peers → `PeerInfo`, chat
+    log, emotes, local mutes) + `peerStates` Map for per-frame positions. Transports:
+    WebSocket to `VITE_MULTIPLAYER_URL` (back-off reconnect) or, in dev without a URL, "local
+    mode" over a BroadcastChannel (tabs of one browser; the transport plays the server).
+    Production without a URL → `PRESENCE_MODE` null → all multiplayer UI hidden.
+  - `server/presence-server.mjs`: `ws` relay, no storage. Validates / clamps / strips control +
+    bidi characters, rate-limits per client (state 20/s, chat 0.5/s burst 3, emotes, info),
+    12 KB frames, `ALLOWED_ORIGINS`, ping-based cleanup, rooms (`?room=`). Never trust the client.
+  - `PresenceSync` (App3D): sends public info — name (or a session "Guest 1234"), avatar,
+    tagline; photo (64 px JPEG) / location / about **only if Settings → Share my profile card**
+    (phone and email are never sent) — and the position at 10 Hz when it changed (2 s heartbeat).
+  - `RemotePlayers` (Canvas): eased positions, CharacterModel per peer, drei Billboard + Text
+    name tag, Html chat / emote bubbles (also above you, id 'self'); the nearest peer within
+    2.2 m registers a normal nearby interactable `peer:<id>` → E opens `peerCard`.
+  - UI: HUD "N online" chip → `people` overlay (list, view card, privacy switches);
+    `ChatBox` (Enter opens, `chatOpen` joins `isInputLocked()` so typing doesn't move; Esc
+    cancels; keys 1–4 = emotes); minimap amber dots; Settings → "Other visitors".
+    Wave emote plays the wave animation (`playerRuntime.emoteUntil`).
 - **Mount order matters**: in `World.tsx`, `<Player />` is before `<ThirdPersonCamera />`
   so the camera follows the same frame's position.
 - **Player visuals are separate from physics**: `PlayerModel.tsx` (origin at feet,
@@ -278,6 +299,8 @@ src/
                          sounds.json, AudioSystem (listener + footsteps), UiSounds
   settings/              settings.ts (sound, time of day; localStorage)
   tour/                  tour.ts (steps + store), TourTracker, TourGuide (beacon + arrow)
+  multiplayer/           presence.ts (store + transports), PresenceSync, RemotePlayers
+server/                  presence-server.mjs (WebSocket relay, own package.json + README)
   minigames/sports/      sportStore (+ sportRuntime), config (spots, cameras, hoop/goal/pitch),
                          SportController (lifecycle, startSport, useSportAction),
                          Basketball, Football, Cricket (3D, mounted in OutdoorGround)
@@ -373,7 +396,8 @@ Wrap in `<Suspense fallback={null}>` so loading never blocks colliders.
       textures / furniture / trees, Quaternius characters with procedural poses.
 - [x] **Phase 8** — guided first-visit tour (steps, beacon, arrow), sound (footsteps, sports,
       UI, synthesised ambience), day / sunset / night, Settings panel.
-- [ ] **Phase 9** — multiplayer presence: other visitors, name tags, emotes, chat, profile cards.
+- [x] **Phase 9** — multiplayer presence: other visitors, name tags, emotes, chat, profile cards
+      (WebSocket relay in `server/`; the live site needs it hosted + `VITE_MULTIPLAYER_URL`).
 - [ ] **Phase 10** — conference-room live sessions (schedule, live now, video on the screen, join).
 - [ ] **Phase 11** — Hindi / English, accessibility pass, installable PWA.
 - [ ] **Phase 12** — real URLs + Open Graph previews for 2D pages, opt-in privacy-friendly analytics.

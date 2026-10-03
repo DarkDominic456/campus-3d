@@ -1,0 +1,10 @@
+{
+  "name": "campus-3d-presence-server",
+  "private": true,
+  "version": "0.1.0",
+  "description": "WebSocket relay for Campus 3D multiplayer presence (positions, chat, emotes). No database.",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": { "start": "node presence-server.mjs" },
+  "dependencies": { "ws": "^8.22.0" }
+}

@@ -3,6 +3,8 @@ import { useGameStore } from '../../store/useGameStore'
 import { zoneLabel } from '../../world/zoneConfig'
 import { ControlsHint } from './ControlsHint'
 import { TourPanel } from './TourPanel'
+import { ChatBox } from './ChatBox'
+import { PRESENCE_MODE, usePresence } from '../../multiplayer/presence'
 import { Minimap } from './Minimap'
 import { SportHud } from './SportHud'
 import { isTypingTarget } from '../../utils/dom'
@@ -19,6 +21,7 @@ export function HUD() {
   const focused = useGameStore((s) => s.focus !== null)
   const touch = useIsTouch()
   const setMode = useModeStore((s) => s.setMode)
+  const showHint = useGameStore((s) => s.showControlsHint)
 
   return (
     <>
@@ -33,6 +36,7 @@ export function HUD() {
         </div>
       )}
       <div className="absolute top-3 right-3 flex flex-wrap items-center justify-end gap-2">
+        <PresenceChip />
         <UserChip />
         <HudButton label="Teleport" hotkey={touch ? undefined : 'T'} onClick={toggleTeleport} />
         <HudButton label="Controls" hotkey={touch ? undefined : 'H'} onClick={toggleHint} />
@@ -41,8 +45,14 @@ export function HUD() {
         <HudButton label="2D site" onClick={() => setMode('2d')} />
       </div>
       {!touch && (
-        <div className="absolute bottom-3 left-3">
+        <div className="absolute bottom-3 left-3 flex flex-col items-start gap-2">
+          <ChatBox />
           <ControlsHint />
+        </div>
+      )}
+      {touch && !showHint && (
+        <div className="absolute top-14 left-1/2 -translate-x-1/2">
+          <ChatBox touch />
         </div>
       )}
       {touch && <TouchControls />}
@@ -150,6 +160,28 @@ function FocusHint() {
       {focus.hint && <span className="mr-3">{focus.hint}</span>}
       <kbd className="rounded bg-white/90 px-1.5 font-mono text-[11px] font-bold text-slate-900">Esc</kbd>{' '}
       {seated ? 'stand up' : 'leave'}
+    </button>
+  )
+}
+
+/** "● 3 online" — opens the People panel (multiplayer). */
+function PresenceChip() {
+  const status = usePresence((s) => s.status)
+  const count = usePresence((s) => Object.keys(s.peers).length)
+  if (!PRESENCE_MODE) return null
+  const label = status === 'online' ? `${count + 1} online` : status === 'off' ? 'Hidden' : status === 'connecting' ? 'Connecting…' : 'Offline'
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        const s = useGameStore.getState()
+        if (!s.activeOverlay) s.openOverlay('people')
+      }}
+      title="People on campus"
+      className="pointer-events-auto flex items-center gap-1.5 rounded-full bg-slate-900/75 px-3 py-1.5 text-sm font-medium text-white shadow-lg ring-1 ring-white/15 backdrop-blur hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-sky-400"
+    >
+      <span className={`size-2 rounded-full ${status === 'online' ? 'bg-emerald-400' : status === 'off' ? 'bg-slate-400' : 'bg-amber-400'}`} aria-hidden />
+      {label}
     </button>
   )
 }

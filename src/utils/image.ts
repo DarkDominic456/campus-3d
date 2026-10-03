@@ -31,3 +31,19 @@ export async function fileToSquareJpeg(file: File, size = 256): Promise<string> 
   }
   return canvas.toDataURL('image/jpeg', 0.4)
 }
+
+/** Shrinks an image data URL to a small square JPEG (e.g. a 64 px avatar for other visitors). */
+export function thumbnailJpeg(dataUrl: string, size = 64, quality = 0.75): Promise<string> {
+  return new Promise((resolve) => {
+    if (!dataUrl) return resolve('')
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = canvas.height = size
+      canvas.getContext('2d')?.drawImage(img, 0, 0, size, size)
+      resolve(canvas.toDataURL('image/jpeg', quality))
+    }
+    img.onerror = () => resolve('')
+    img.src = dataUrl
+  })
+}

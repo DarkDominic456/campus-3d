@@ -24,6 +24,8 @@ export const playerRuntime = {
   cameraTooClose: false,
   /** Standing on something (set by Player each frame; footsteps / landing sounds read it). */
   grounded: true,
+  /** An emote animation plays while standing still until this time (performance.now ms). */
+  emoteUntil: 0,
 }
 
 /**
